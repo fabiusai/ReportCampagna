@@ -201,14 +201,16 @@
       reader.readAsBinaryString(file);
     });
 
-    document.getElementById("copy-btn").addEventListener("click", function() {
-      const temp = document.createElement("textarea");
-      temp.value = document.getElementById("report").innerText;
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand("copy");
-      document.body.removeChild(temp);
-      alert("Testo copiato!");
+    document.getElementById("copy-btn").addEventListener("click", async function() {
+      const html = document.getElementById("report").innerHTML;
+      const blob = new Blob([html], { type: "text/html" });
+      const data = [new ClipboardItem({ "text/html": blob })];
+      try {
+        await navigator.clipboard.write(data);
+        alert("Testo copiato con formattazione!");
+      } catch (err) {
+        alert("Copia fallita. Il browser potrebbe non supportare questa funzione.");
+      }
     });
 
     document.getElementById("download-btn").addEventListener("click", function() {
