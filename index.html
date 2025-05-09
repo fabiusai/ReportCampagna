@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Social Campaign Analyzer</title>
+  <link rel="icon" type="image/png" href="camp.png">
+  <style>
+    body {
+      font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #fff;
+      color: #000;
+    }
+    header {
+      background-color: #FFD800;
+      padding: 20px;
+    }
+    header h1 {
+      margin: 0;
+      color: #0033A0;
+      font-size: 1.6em;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+    h2 {
+      color: #0033A0;
+      margin-bottom: 0.5em;
+    }
+    label, p, strong {
+      font-size: 1em;
+    }
+    strong {
+      color: #0033A0;
+    }
+    input[type="file"] {
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      font-family: inherit;
+    }
+    button {
+      background-color: #0033A0;
+      color: #fff;
+      padding: 10px 16px;
+      border: none;
+      font-size: 1em;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    #report {
+      white-space: pre-wrap;
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-top: 20px;
+    }
+    a {
+      color: #0033A0;
+      text-decoration: underline;
+    }
+    em {
+      font-style: italic;
+      color: #555;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Social Campaign Analyzer</h1>
+  </header>
+  <div class="container">
+    <h2>Carica il file Excel</h2>
+    <input type="file" id="file-input" accept=".xlsx" />
+    <br>
+    <button id="copy-btn">Copia Testo</button>
+    <button id="download-btn">Scarica Word</button>
+
+    <div id="report">Il report verrà generato qui...</div>
+  </div>
+
+  <script>
+    let latestHtml = "";
+
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
+
+    function formatNumber(value) {
+      if (isNaN(value)) return "0";
+      if (value < 1000) return value.toString();
+      if (value < 1000000) {
+        let result = (value / 1000).toFixed(2);
+        return result.replace(".", ",").replace(/,00$/, "") + "K";
+      }
+      let result = (value / 1000000).toFixed(2);
+      return result.replace(".", ",").replace(/,00$/, "") + "M";
+    }
+
+    function cleanLabel(label) {
+      const tags = ["#PES", "#TER", "#ISR", "#FIL", "#EB", "#NED", "#CET", "#DEI", "#ST", "#RIC"];
+      tags.forEach(tag => {
+        label = label.replace(tag, "");
+      });
+      return label.replace(/;/g, "").trim();
+    }
+
+    function generateList(title, obj) {
+      const entries = Object.entries(obj)
+        .filter(([_, v]) => v > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([k, v]) => `${capitalize(k)}: ${formatNumber(v)}`)
+        .join("<br>");
+      return `<p><strong>${title}:</strong><br>${entries}</p>`;
+    }
+
+    function generateLinkSection(linksByPlatform, missingCount) {
+      let html = "<br><strong>Link ai post:</strong><br>";
+      Object.entries(linksByPlatform).forEach(([platform, links]) => {
+        html += `<br><strong>${platform}</strong><br>`;
+        links.forEach(link => {
+          html += `<a href="${link}" target="_blank">${link}</a><br>`;
+        });
+      });
+      if (missingCount > 0) {
+        html += `<br><em>N.B. L'elenco dei link non contiene le ${missingCount} Instagram stories.</em>`;
+      }
+      return html;
+    }
+
+    function generateHtmlReport(data) {
+      const postsByPlatform = {}, viewsByPlatform = {}, interactionsByPlatform = {},
+            reactionsByPlatform = {}, clicksByPlatform = {},
+            linksByPlatform = {};
+      let totalViews = 0, totalInteractions = 0, totalReactions = 0, totalClicks = 0;
+      let missingInstagramStories = 0;
+
+      data.forEach(row => {
+        let platform = row["Platform"]?.toString().trim().toLowerCase() || "Sconosciuto";
+        if (platform === "twitter") platform = "X";
+        const capitalizedPlatform = platform.charAt(0).toUpperCase() + platform.slice(1);
+
+        postsByPlatform[platform] = (postsByPlatform[platform] || 0) + 1;
+        const views = parseFloat(row["Total impressions"]) || parseFloat(row["Video view count"]) || 0;
+        const interactions = parseFloat(row["Total interactions"]) || parseFloat(row["Taps forward"]) || 0;
+        const reactions = parseFloat(row["Total reactions"]) || 0;
+        const clicks = parseFloat(row["Post clicks"]) || 0;
+        const link = row["View on platform"]?.toString().trim();
+
+        viewsByPlatform[platform] = (viewsByPlatform[platform] || 0) + views;
+        interactionsByPlatform[platform] = (interactionsByPlatform[platform] || 0) + interactions;
+        reactionsByPlatform[platform] = (reactionsByPlatform[platform] || 0) + reactions;
+        clicksByPlatform[platform] = (clicksByPlatform[platform] || 0) + clicks;
+
+        if (link) {
+          if (!linksByPlatform[capitalizedPlatform]) linksByPlatform[capitalizedPlatform] = [];
+          linksByPlatform[capitalizedPlatform].push(link);
+        } else if (capitalizedPlatform === "Instagram") {
+          missingInstagramStories++;
+        }
+
+        totalViews += views;
+        totalInteractions += interactions;
+        totalReactions += reactions;
+        totalClicks += clicks;
+      });
+
+      const totalPosts = data.length;
+      const label = cleanLabel(data.find(row => row["Labels"])?.["Labels"] || "");
+
+      const html =
+        `Risultati della campagna social dedicata all'argomento "${label}"<br>` +
+        `<strong>Complessivamente sono stati pubblicati ${totalPosts} post</strong>, ` +
+        `che hanno ottenuto <strong>${formatNumber(totalViews)}</strong> visualizzazioni ` +
+        `e <strong>${formatNumber(totalInteractions)}</strong> interazioni.<br>` +
+        `Nello specifico i dati sono così ripartiti tra i diversi canali:<br>` +
+        generateList("Numero post", postsByPlatform) +
+        generateList("Visualizzazioni", viewsByPlatform) +
+        generateList("Interazioni", interactionsByPlatform) +
+        generateList("Like e reazioni", reactionsByPlatform) +
+        generateList("Click", clicksByPlatform) +
+        generateLinkSection(linksByPlatform, missingInstagramStories);
+
+      latestHtml = html;
+      document.getElementById("report").innerHTML = html;
+    }
+
+    document.getElementById("file-input").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, {type: 'binary'});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(sheet, {defval: ""});
+        generateHtmlReport(jsonData);
+      };
+      reader.readAsBinaryString(file);
+    });
+
+    document.getElementById("copy-btn").addEventListener("click", function() {
+      const temp = document.createElement("textarea");
+      temp.value = document.getElementById("report").innerText;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      document.body.removeChild(temp);
+      alert("Testo copiato!");
+    });
+
+    document.getElementById("download-btn").addEventListener("click", function() {
+      const htmlContent = `
+<html><head><meta charset='utf-8'></head><body style="font-family:Arial; font-size:14px;">
+${latestHtml}
+</body></html>`;
+      const blob = new Blob([htmlContent], {type: "application/msword"});
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "Report_Campagna_Social.doc";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  </script>
+</body>
+</html>
