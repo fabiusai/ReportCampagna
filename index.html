@@ -1,231 +1,885 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>Social Campaign Analyzer</title>
-  <link rel="icon" type="image/png" href="camp.png">
-  <style>
-    body {
-      font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #fff;
-      color: #000;
-    }
-    header {
-      background-color: #FFD800;
-      padding: 20px;
-    }
-    header h1 {
-      margin: 0;
-      color: #0033A0;
-      font-size: 1.6em;
-    }
-    .container {
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-    }
-    h2 {
-      color: #0033A0;
-      margin-bottom: 0.5em;
-    }
-    label, p, strong {
-      font-size: 1em;
-    }
-    strong {
-      color: #0033A0;
-    }
-    input[type="file"] {
-      padding: 8px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      font-family: inherit;
-    }
-    button {
-      background-color: #0033A0;
-      color: #fff;
-      padding: 10px 16px;
-      border: none;
-      font-size: 1em;
-      margin-right: 10px;
-      cursor: pointer;
-    }
-    #report {
-      white-space: pre-wrap;
-      border: 1px solid #ccc;
-      padding: 15px;
-      margin-top: 20px;
-    }
-    a {
-      color: #0033A0;
-      text-decoration: underline;
-    }
-    em {
-      font-style: italic;
-      color: #555;
-    }
-  </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-</head>
-<body>
-  <header>
-    <h1>Social Campaign Analyzer</h1>
-  </header>
-  <div class="container">
-    <h2>Carica il file Excel</h2>
-    <input type="file" id="file-input" accept=".xlsx" />
-    <br>
-    <button id="copy-btn">Copia Testo</button>
-    <button id="download-btn">Scarica Word</button>
-
-    <div id="report">Il report verrà generato qui...</div>
-  </div>
-
-  <script>
-    let latestHtml = "";
-
-    function capitalize(str) {
-      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-    }
-
-    function formatNumber(value) {
-      if (isNaN(value)) return "0";
-      if (value < 1000) return value.toString();
-      if (value < 1000000) {
-        let result = (value / 1000).toFixed(2);
-        return result.replace(".", ",").replace(/,00$/, "") + "K";
-      }
-      let result = (value / 1000000).toFixed(2);
-      return result.replace(".", ",").replace(/,00$/, "") + "M";
-    }
-
-    function cleanLabel(label) {
-      const tags = ["#PES", "#TER", "#ISR", "#FIL", "#EB", "#NED", "#CET", "#DEI", "#ST", "#RIC"];
-      tags.forEach(tag => {
-        label = label.replace(tag, "");
-      });
-      return label.replace(/;/g, "").trim();
-    }
-
-    function generateList(title, obj) {
-      const entries = Object.entries(obj)
-        .filter(([_, v]) => v > 0)
-        .sort((a, b) => b[1] - a[1])
-        .map(([k, v]) => `${capitalize(k)}: ${formatNumber(v)}`)
-        .join("<br>");
-      return `<p><strong>${title}:</strong><br>${entries}</p>`;
-    }
-
-    function generateLinkSection(linksByPlatform, missingCount) {
-      let html = "<br><strong>Link ai post:</strong><br>";
-      Object.entries(linksByPlatform).forEach(([platform, links]) => {
-        html += `<br><strong>${platform}</strong><br>`;
-        links.forEach(link => {
-          html += `<a href="${link}" target="_blank">${link}</a><br>`;
-        });
-      });
-      if (missingCount > 0) {
-        html += `<br><em>N.B. L'elenco dei link non contiene le ${missingCount} Instagram stories.</em>`;
-      }
-      return html;
-    }
-
-    function generateHtmlReport(data) {
-      const postsByPlatform = {}, viewsByPlatform = {}, interactionsByPlatform = {},
-            reactionsByPlatform = {}, clicksByPlatform = {},
-            linksByPlatform = {};
-      let totalViews = 0, totalInteractions = 0, totalReactions = 0, totalClicks = 0;
-      let missingInstagramStories = 0;
-
-      data.forEach(row => {
-        let platform = row["Platform"]?.toString().trim().toLowerCase() || "Sconosciuto";
-        if (platform === "twitter") platform = "X";
-        const capitalizedPlatform = platform.charAt(0).toUpperCase() + platform.slice(1);
-
-        postsByPlatform[platform] = (postsByPlatform[platform] || 0) + 1;
-        const views = parseFloat(row["Total impressions"]) || parseFloat(row["Video view count"]) || 0;
-        const interactions = parseFloat(row["Total interactions"]) || parseFloat(row["Taps forward"]) || 0;
-        const reactions = parseFloat(row["Total reactions"]) || 0;
-        const clicks = parseFloat(row["Post clicks"]) || 0;
-        const link = row["View on platform"]?.toString().trim();
-
-        viewsByPlatform[platform] = (viewsByPlatform[platform] || 0) + views;
-        interactionsByPlatform[platform] = (interactionsByPlatform[platform] || 0) + interactions;
-        reactionsByPlatform[platform] = (reactionsByPlatform[platform] || 0) + reactions;
-        clicksByPlatform[platform] = (clicksByPlatform[platform] || 0) + clicks;
-
-        if (link) {
-          if (!linksByPlatform[capitalizedPlatform]) linksByPlatform[capitalizedPlatform] = [];
-          linksByPlatform[capitalizedPlatform].push(link);
-        } else if (capitalizedPlatform === "Instagram") {
-          missingInstagramStories++;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Campaign Analyzer - Poste Italiane</title>
+    <link rel="icon" type="image/png" href="camp.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        totalViews += views;
-        totalInteractions += interactions;
-        totalReactions += reactions;
-        totalClicks += clicks;
-      });
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #333;
+            line-height: 1.6;
+        }
 
-      const totalPosts = data.length;
-      const label = cleanLabel(data.find(row => row["Labels"])?.["Labels"] || "");
+        /* Header Section */
+        header {
+            background: linear-gradient(135deg, #FFD800 0%, #ffed4a 100%);
+            padding: 30px 20px;
+            box-shadow: 0 4px 20px rgba(255, 216, 0, 0.3);
+        }
 
-      const html =
-        `Risultati della campagna social dedicata all'argomento "${label}"<br>` +
-        `<strong>Complessivamente sono stati pubblicati ${totalPosts} post</strong>, ` +
-        `che hanno ottenuto <strong>${formatNumber(totalViews)}</strong> visualizzazioni ` +
-        `e <strong>${formatNumber(totalInteractions)}</strong> interazioni.<br>` +
-        `Nello specifico i dati sono così ripartiti tra i diversi canali:<br>` +
-        generateList("Numero post", postsByPlatform) +
-        generateList("Visualizzazioni", viewsByPlatform) +
-        generateList("Interazioni", interactionsByPlatform) +
-        generateList("Like e reazioni", reactionsByPlatform) +
-        generateList("Click", clicksByPlatform) +
-        generateLinkSection(linksByPlatform, missingInstagramStories);
+        header h1 {
+            margin: 0;
+            color: #0033A0;
+            font-size: 2.2em;
+            font-weight: 600;
+            text-align: center;
+        }
 
-      latestHtml = html;
-      document.getElementById("report").innerHTML = html;
-    }
+        .header-subtitle {
+            text-align: center;
+            color: #0033A0;
+            font-size: 1.1em;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
 
-    document.getElementById("file-input").addEventListener("change", function(e) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const data = evt.target.result;
-        const workbook = XLSX.read(data, {type: 'binary'});
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(sheet, {defval: ""});
-        generateHtmlReport(jsonData);
-      };
-      reader.readAsBinaryString(file);
-    });
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
 
-    document.getElementById("copy-btn").addEventListener("click", async function() {
-      const html = document.getElementById("report").innerHTML;
-      const blob = new Blob([html], { type: "text/html" });
-      const data = [new ClipboardItem({ "text/html": blob })];
-      try {
-        await navigator.clipboard.write(data);
-        alert("Testo copiato con formattazione!");
-      } catch (err) {
-        alert("Copia fallita. Il browser potrebbe non supportare questa funzione.");
-      }
-    });
+        /* Section Styling */
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #FFD800;
+        }
 
-    document.getElementById("download-btn").addEventListener("click", function() {
-      const htmlContent = `
+        .section-title {
+            color: #0033A0;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* File Upload Styling */
+        .upload-section {
+            border: 2px dashed #0033A0;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-section:hover {
+            border-color: #FFD800;
+            background: #fffef8;
+        }
+
+        .upload-section.dragover {
+            border-color: #FFD800;
+            background: #fffbcd;
+            transform: scale(1.02);
+        }
+
+        input[type="file"] {
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1em;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input[type="file"]:focus {
+            border-color: #0033A0;
+            outline: none;
+        }
+
+        /* Button Styling */
+        button {
+            background: linear-gradient(135deg, #0033A0 0%, #0056b3 100%);
+            color: #fff;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 150px;
+            justify-content: center;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 51, 160, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.loading {
+            background: #e0e0e0;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        button.success {
+            background: linear-gradient(135deg, #28a745 0%, #34ce57 100%);
+            color: white;
+        }
+
+        .secondary-btn {
+            background: linear-gradient(135deg, #FFD800 0%, #ffed4a 100%);
+            color: #0033A0;
+        }
+
+        .secondary-btn:hover {
+            box-shadow: 0 4px 15px rgba(255, 216, 0, 0.4);
+        }
+
+        /* Report Section */
+        #report {
+            white-space: pre-wrap;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            background: #f8f9ff;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        #report strong {
+            color: #0033A0;
+            font-weight: 600;
+        }
+
+        #report a {
+            color: #0033A0;
+            text-decoration: underline;
+        }
+
+        #report a:hover {
+            color: #FFD800;
+        }
+
+        #report em {
+            font-style: italic;
+            color: #666;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #0033A0 0%, #0056b3 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 51, 160, 0.2);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Charts Section */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .chart-wrapper {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #FFD800;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            color: #0033A0;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .chart {
+            width: 100%;
+            height: 400px;
+        }
+
+        .export-section {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding-top: 20px;
+            border-top: 1px solid #e0e6ed;
+            margin-top: 20px;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #666;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            button {
+                width: 100%;
+                margin-right: 0;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>📊 Social Campaign Analyzer</h1>
+        <p class="header-subtitle">Strumento di analisi campagne social - Poste Italiane</p>
+    </header>
+
+    <div class="container">
+        <!-- Upload Section -->
+        <div class="section">
+            <h2 class="section-title">📁 Carica il file Excel</h2>
+            <div class="upload-section" id="uploadArea">
+                <div style="font-size: 3rem; margin-bottom: 15px;">📊</div>
+                <p><strong>Trascina qui il file Excel</strong></p>
+                <p>oppure clicca per selezionare (.xlsx)</p>
+                <input type="file" id="file-input" accept=".xlsx" />
+            </div>
+            
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button id="copy-btn" class="secondary-btn">
+                    <span>📋</span>
+                    <span>Copia Testo</span>
+                </button>
+                <button id="download-btn">
+                    <span>💾</span>
+                    <span>Scarica Word</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Report Section -->
+        <div class="section">
+            <h2 class="section-title">📄 Report Testuale</h2>
+            <div id="report">Il report verrà generato qui...</div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div id="analyticsSection" class="hidden">
+                            <div class="section">
+                <h2 class="section-title">📈 Metriche Generali</h2>
+                <div class="metrics-grid" id="metricsGrid"></div>
+                <div class="export-section">
+                    <button class="secondary-btn" id="exportMetricsBtn">
+                        <span>📥</span>
+                        <span>Esporta Metriche SVG</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">📊 Grafici di Analisi</h2>
+                <div class="charts-container" id="chartsContainer"></div>
+                <div class="export-section">
+                    <button class="secondary-btn" id="exportAllBtn">
+                        <span>📥</span>
+                        <span>Esporta Tutti i Grafici SVG</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let latestHtml = "";
+        let campaignData = null;
+
+        // Funzioni helper (dalla versione originale)
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        }
+
+        function formatNumber(value) {
+            if (isNaN(value)) return "0";
+            if (value < 1000) return value.toString();
+            if (value < 1000000) {
+                let result = (value / 1000).toFixed(2);
+                return result.replace(".", ",").replace(/,00$/, "") + "K";
+            }
+            let result = (value / 1000000).toFixed(2);
+            return result.replace(".", ",").replace(/,00$/, "") + "M";
+        }
+
+        function formatNumberForCharts(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1).replace(".", ",") + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1).replace(".", ",") + 'K';
+            }
+            return num.toString();
+        }
+
+        function cleanLabel(label) {
+            const tags = ["#PES", "#TER", "#ISR", "#FIL", "#EB", "#NED", "#CET", "#DEI", "#ST", "#RIC"];
+            tags.forEach(tag => {
+                label = label.replace(tag, "");
+            });
+            return label.replace(/;/g, "").trim();
+        }
+
+        function generateList(title, obj) {
+            const entries = Object.entries(obj)
+                .filter(([_, v]) => v > 0)
+                .sort((a, b) => b[1] - a[1])
+                .map(([k, v]) => `${capitalize(k)}: ${formatNumber(v)}`)
+                .join("<br>");
+            return `<p><strong>${title}:</strong><br>${entries}</p><br>`;
+        }
+
+        function generateLinkSection(linksByPlatform, missingCount) {
+            let html = "<br><strong>Link ai post:</strong><br>";
+            Object.entries(linksByPlatform).forEach(([platform, links]) => {
+                html += `<br><strong>${platform}</strong><br>`;
+                links.forEach(link => {
+                    html += `<a href="${link}" target="_blank">${link}</a><br>`;
+                });
+            });
+            if (missingCount > 0) {
+                html += `<br><em>N.B. L'elenco dei link non contiene le ${missingCount} Instagram stories.</em>`;
+            }
+            return html;
+        }
+
+        // Upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('file-input');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].name.endsWith('.xlsx')) {
+                processExcelFile(files[0]);
+            }
+        }
+
+        function processExcelFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = evt.target.result;
+                const workbook = XLSX.read(data, {type: 'binary'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(sheet, {defval: ""});
+                generateHtmlReport(jsonData);
+                generateCharts(jsonData);
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        function generateHtmlReport(data) {
+            const postsByPlatform = {}, viewsByPlatform = {}, interactionsByPlatform = {},
+                  reactionsByPlatform = {}, clicksByPlatform = {},
+                  linksByPlatform = {};
+            let totalViews = 0, totalInteractions = 0, totalReactions = 0, totalClicks = 0;
+            let missingInstagramStories = 0;
+
+            data.forEach(row => {
+                let platform = row["Platform"]?.toString().trim().toLowerCase() || "Sconosciuto";
+                if (platform === "twitter") platform = "X";
+                const capitalizedPlatform = platform.charAt(0).toUpperCase() + platform.slice(1);
+
+                postsByPlatform[platform] = (postsByPlatform[platform] || 0) + 1;
+                const views = parseFloat(row["Total impressions"]) || parseFloat(row["Video view count"]) || 0;
+                const interactions = parseFloat(row["Total interactions"]) || parseFloat(row["Taps forward"]) || 0;
+                const reactions = parseFloat(row["Total reactions"]) || 0;
+                const clicks = parseFloat(row["Post clicks"]) || 0;
+                const link = row["View on platform"]?.toString().trim();
+
+                viewsByPlatform[platform] = (viewsByPlatform[platform] || 0) + views;
+                interactionsByPlatform[platform] = (interactionsByPlatform[platform] || 0) + interactions;
+                reactionsByPlatform[platform] = (reactionsByPlatform[platform] || 0) + reactions;
+                clicksByPlatform[platform] = (clicksByPlatform[platform] || 0) + clicks;
+
+                if (link) {
+                    if (!linksByPlatform[capitalizedPlatform]) linksByPlatform[capitalizedPlatform] = [];
+                    linksByPlatform[capitalizedPlatform].push(link);
+                } else if (capitalizedPlatform === "Instagram") {
+                    missingInstagramStories++;
+                }
+
+                totalViews += views;
+                totalInteractions += interactions;
+                totalReactions += reactions;
+                totalClicks += clicks;
+            });
+
+            const totalPosts = data.length;
+            const label = cleanLabel(data.find(row => row["Labels"])?.["Labels"] || "");
+
+            const html =
+                `Risultati della campagna social dedicata all'argomento "${label}"<br>` +
+                `<strong>Complessivamente sono stati pubblicati ${totalPosts} post</strong>, ` +
+                `che hanno ottenuto <strong>${formatNumber(totalViews)}</strong> visualizzazioni ` +
+                `e <strong>${formatNumber(totalInteractions)}</strong> interazioni.<br>` +
+                `Nello specifico i dati sono così ripartiti tra i diversi canali:<br>` +
+                generateList("Numero post", postsByPlatform) +
+                generateList("Visualizzazioni", viewsByPlatform) +
+                generateList("Interazioni", interactionsByPlatform) +
+                generateList("Like e reazioni", reactionsByPlatform) +
+                generateList("Click", clicksByPlatform) +
+                generateLinkSection(linksByPlatform, missingInstagramStories);
+
+            latestHtml = html;
+            document.getElementById("report").innerHTML = html;
+
+            // Store data for charts
+            campaignData = {
+                totalPosts,
+                totalViews,
+                totalInteractions,
+                totalReactions,
+                totalClicks,
+                platforms: {}
+            };
+
+            Object.keys(postsByPlatform).forEach(platform => {
+                campaignData.platforms[platform] = {
+                    posts: postsByPlatform[platform] || 0,
+                    views: viewsByPlatform[platform] || 0,
+                    interactions: interactionsByPlatform[platform] || 0,
+                    reactions: reactionsByPlatform[platform] || 0,
+                    clicks: clicksByPlatform[platform] || 0
+                };
+            });
+        }
+
+        function generateCharts(data) {
+            if (!campaignData) return;
+
+            generateMetrics();
+            generateChartsVisual();
+            document.getElementById('analyticsSection').classList.remove('hidden');
+        }
+
+        function generateMetrics() {
+            const metricsGrid = document.getElementById('metricsGrid');
+            const metrics = [
+                { label: 'Post Totali', value: campaignData.totalPosts },
+                { label: 'Visualizzazioni', value: formatNumberForCharts(campaignData.totalViews) },
+                { label: 'Interazioni', value: formatNumberForCharts(campaignData.totalInteractions) },
+                { label: 'Like e Reazioni', value: formatNumberForCharts(campaignData.totalReactions) }
+            ];
+
+            const metricsHtml = metrics.map(metric => `
+                <div class="metric-card">
+                    <div class="metric-value">${metric.value}</div>
+                    <div class="metric-label">${metric.label}</div>
+                </div>
+            `).join('');
+            
+            metricsGrid.innerHTML = metricsHtml;
+            
+            // Create SVG version of metrics for export
+            createMetricsSVG(metrics);
+        }
+
+        function createMetricsSVG(metrics) {
+            const svgWidth = 800;
+            const svgHeight = 320; // Ridotto per avvicinare il titolo
+            const cardWidth = 180;
+            const cardHeight = 120;
+            const spacing = 20;
+            const startX = (svgWidth - (metrics.length * cardWidth + (metrics.length - 1) * spacing)) / 2;
+            const startY = 60; // Ridotto per avvicinare al titolo
+            
+            let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="metricsGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#0033A0;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#0056b3;stop-opacity:1" />
+                    </linearGradient>
+                </defs>`;
+                
+            // Title - allineato a sinistra al primo blocchetto e molto più vicino
+            svg += `<text x="${startX}" y="30" text-anchor="start" 
+                    font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="20" 
+                    fill="#0033A0" font-weight="400">Metriche Generali</text>`;
+            
+            metrics.forEach((metric, index) => {
+                const x = startX + index * (cardWidth + spacing);
+                const y = startY;
+                
+                // Card background
+                svg += `<rect x="${x}" y="${y}" width="${cardWidth}" height="${cardHeight}" 
+                        fill="url(#metricsGradient)" rx="12" ry="12"/>`;
+                
+                // Value text
+                svg += `<text x="${x + cardWidth/2}" y="${y + 50}" text-anchor="middle" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="32" 
+                        fill="white" font-weight="bold">${metric.value}</text>`;
+                
+                // Label text
+                svg += `<text x="${x + cardWidth/2}" y="${y + 80}" text-anchor="middle" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="14" 
+                        fill="white" opacity="0.9">${metric.label}</text>`;
+            });
+            
+            svg += '</svg>';
+            window.metricsSVG = svg;
+        }
+
+        function generateChartsVisual() {
+            const container = document.getElementById('chartsContainer');
+            container.innerHTML = '';
+
+            // Views by platform chart (sorted)
+            const viewsData = Object.entries(campaignData.platforms)
+                .map(([name, data]) => ({ name: capitalize(name), value: data.views }))
+                .sort((a, b) => b.value - a.value);
+            const viewsChart = createBarChart('Visualizzazioni per Piattaforma', viewsData);
+
+            // Interactions by platform chart (sorted)
+            const interactionsData = Object.entries(campaignData.platforms)
+                .map(([name, data]) => ({ name: capitalize(name), value: data.interactions }))
+                .sort((a, b) => b.value - a.value);
+            const interactionsChart = createBarChart('Interazioni per Piattaforma', interactionsData);
+
+            // Like e reazioni chart (sorted)
+            const reactionsData = Object.entries(campaignData.platforms)
+                .map(([name, data]) => ({ name: capitalize(name), value: data.reactions }))
+                .sort((a, b) => b.value - a.value);
+            const reactionsChart = createBarChart('Like e Reazioni per Piattaforma', reactionsData);
+
+            container.appendChild(createChartWrapper('Visualizzazioni per Piattaforma', viewsChart));
+            container.appendChild(createChartWrapper('Interazioni per Piattaforma', interactionsChart));
+            container.appendChild(createChartWrapper('Like e Reazioni per Piattaforma', reactionsChart));
+        }
+
+        function createChartWrapper(title, chart) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'chart-wrapper';
+            wrapper.innerHTML = `
+                <div class="chart-title">${title}</div>
+                <div class="chart">${chart}</div>
+                <div class="export-section">
+                    <button class="secondary-btn" onclick="exportChart('${title.replace(/\s+/g, '_')}', this.parentElement.previousElementSibling)">
+                        <span>📥</span>
+                        <span>Esporta SVG</span>
+                    </button>
+                </div>
+            `;
+            return wrapper;
+        }
+
+        function createBarChart(title, data) {
+            const maxValue = Math.max(...data.map(d => parseFloat(d.value)));
+            
+            // Formato 4:5 (alto 4, largo 5)
+            const svgHeight = 400;
+            const svgWidth = 500;
+            const margin = { top: 60, right: 30, bottom: 90, left: 60 };
+            const chartWidth = svgWidth - margin.left - margin.right;
+            const chartHeight = svgHeight - margin.top - margin.bottom;
+            
+            const barWidth = chartWidth / data.length * 0.7;
+            const barSpacing = chartWidth / data.length * 0.3;
+            
+            let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="gradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#FFD800;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#ffed4a;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="gradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#0033A0;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#0056b3;stop-opacity:1" />
+                    </linearGradient>
+                </defs>`;
+                
+            // Title
+            svg += `<text x="${svgWidth/2}" y="30" text-anchor="middle" 
+                    font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="20" 
+                    fill="#0033A0" font-weight="400">${title}</text>`;
+            
+            // Draw bars
+            data.forEach((item, index) => {
+                const barHeight = maxValue > 0 ? (parseFloat(item.value) / maxValue) * chartHeight : 0;
+                const x = margin.left + (index * (barWidth + barSpacing));
+                const y = margin.top + (chartHeight - barHeight);
+                const gradient = index % 2 === 0 ? 'gradient1' : 'gradient2';
+                
+                svg += `<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" 
+                        fill="url(#${gradient})" rx="4" ry="4">
+                        <title>${item.name}: ${formatNumberForCharts(item.value)}</title>
+                        </rect>`;
+                
+                // Value labels
+                svg += `<text x="${x + barWidth/2}" y="${y - 8}" text-anchor="middle" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="14" 
+                        fill="#333" font-weight="600">
+                        ${formatNumberForCharts(item.value)}
+                        </text>`;
+                
+                // Platform labels - più grandi e più vicine all'asse X
+                svg += `<text x="${x + barWidth/2}" y="${svgHeight - 45}" text-anchor="middle" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="14" 
+                        fill="#0033A0" font-weight="600"
+                        transform="rotate(-35 ${x + barWidth/2} ${svgHeight - 45})">
+                        ${item.name}
+                        </text>`;
+            });
+            
+            svg += '</svg>';
+            return svg;
+        }
+
+        function exportChart(chartName, chartElement) {
+            const button = event.target.closest('button');
+            const originalContent = button.innerHTML;
+            
+            button.innerHTML = '<span class="loading-spinner"></span><span>Esportazione...</span>';
+            button.classList.add('loading');
+            
+            setTimeout(() => {
+                const svgContent = chartElement.innerHTML;
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${chartName}.svg`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                button.innerHTML = '<span>✅</span><span>Esportato!</span>';
+                button.classList.remove('loading');
+                button.classList.add('success');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('success');
+                }, 2000);
+            }, 1000);
+        }
+
+        // Event listeners
+        document.getElementById("file-input").addEventListener("change", function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processExcelFile(file);
+            }
+        });
+
+        document.getElementById("copy-btn").addEventListener("click", async function() {
+            const button = this;
+            const originalContent = button.innerHTML;
+            
+            button.innerHTML = '<span class="loading-spinner"></span><span>Copiando...</span>';
+            button.classList.add('loading');
+            
+            setTimeout(async () => {
+                const html = document.getElementById("report").innerHTML;
+                const blob = new Blob([html], { type: "text/html" });
+                const data = [new ClipboardItem({ "text/html": blob })];
+                try {
+                    await navigator.clipboard.write(data);
+                    button.innerHTML = '<span>✅</span><span>Copiato!</span>';
+                    button.classList.remove('loading');
+                    button.classList.add('success');
+                } catch (err) {
+                    button.innerHTML = '<span>⚠️</span><span>Errore</span>';
+                    button.classList.remove('loading');
+                    alert("Copia fallita. Il browser potrebbe non supportare questa funzione.");
+                }
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('success');
+                }, 2000);
+            }, 800);
+        });
+
+        document.getElementById("download-btn").addEventListener("click", function() {
+            const button = this;
+            const originalContent = button.innerHTML;
+            
+            button.innerHTML = '<span class="loading-spinner"></span><span>Generando...</span>';
+            button.classList.add('loading');
+            
+            setTimeout(() => {
+                const htmlContent = `
 <html><head><meta charset='utf-8'></head><body style="font-family:Arial; font-size:14px;">
 ${latestHtml}
 </body></html>`;
-      const blob = new Blob([htmlContent], {type: "application/msword"});
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "Report_Campagna_Social.doc";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
-  </script>
+                const blob = new Blob([htmlContent], {type: "application/msword"});
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "Report_Campagna_Social.doc";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                button.innerHTML = '<span>✅</span><span>Scaricato!</span>';
+                button.classList.remove('loading');
+                button.classList.add('success');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('success');
+                }, 2000);
+            }, 1200);
+        });
+
+        // Export all charts functionality
+        document.getElementById('exportAllBtn').addEventListener('click', function() {
+            const button = this;
+            const originalContent = button.innerHTML;
+            
+            button.innerHTML = '<span class="loading-spinner"></span><span>Esportazione in corso...</span>';
+            button.classList.add('loading');
+            
+            setTimeout(() => {
+                const charts = document.querySelectorAll('.chart');
+                charts.forEach((chart, index) => {
+                    const svgContent = chart.innerHTML;
+                    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `grafico_${index + 1}.svg`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+                
+                button.innerHTML = '<span>✅</span><span>Tutti i grafici esportati!</span>';
+                button.classList.remove('loading');
+                button.classList.add('success');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('success');
+                }, 3000);
+            }, 1500);
+        });
+
+        // Export metrics functionality
+        document.getElementById('exportMetricsBtn').addEventListener('click', function() {
+            const button = this;
+            const originalContent = button.innerHTML;
+            
+            button.innerHTML = '<span class="loading-spinner"></span><span>Esportando...</span>';
+            button.classList.add('loading');
+            
+            setTimeout(() => {
+                if (window.metricsSVG) {
+                    const blob = new Blob([window.metricsSVG], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'metriche_generali.svg';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    button.innerHTML = '<span>✅</span><span>Esportato!</span>';
+                    button.classList.add('success');
+                } else {
+                    button.innerHTML = '<span>⚠️</span><span>Errore</span>';
+                }
+                button.classList.remove('loading');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('success');
+                }, 2000);
+            }, 1000);
+        });
+    </script>
 </body>
 </html>
