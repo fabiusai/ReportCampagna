@@ -204,6 +204,12 @@
             box-shadow: 0 4px 15px rgba(0, 51, 160, 0.2);
         }
 
+        .metric-card.light-mode {
+            background: linear-gradient(135deg, #bfd7fd 0%, #bfd7fd 100%);
+            color: #0033A0;
+            box-shadow: 0 4px 15px rgba(191, 215, 253, 0.3);
+        }
+
         .metric-value {
             font-size: 2.5rem;
             font-weight: bold;
@@ -382,6 +388,14 @@
                 </h2>
                 <div class="metrics-grid" id="metricsGrid"></div>
                 <div class="export-section">
+                    <button class="secondary-btn" onclick="toggleLightMode()" id="lightModeBtn">
+                        <span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                                <path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                            </svg>
+                        </span>
+                        <span>Modalità Light</span>
+                    </button>
                     <button class="secondary-btn" id="exportMetricsBtn">
                         <span>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
@@ -419,6 +433,7 @@
         let latestHtml = "";
         let campaignData = null;
         let campaignLabel = "";
+        let isLightMode = false;
 
         // Social media logos SVG - all in Poste blue color
         const socialLogos = {
@@ -625,7 +640,7 @@
             ];
 
             const metricsHtml = metrics.map(metric => `
-                <div class="metric-card">
+                <div class="metric-card${isLightMode ? ' light-mode' : ''}">
                     <div class="metric-value">${metric.value}</div>
                     <div class="metric-label">${metric.label}</div>
                 </div>
@@ -646,11 +661,17 @@
             const startX = (svgWidth - (metrics.length * cardWidth + (metrics.length - 1) * spacing)) / 2;
             const startY = 45; // Ridotto da 60
             
+            // Colors based on mode
+            const gradientColors = isLightMode 
+                ? { start: '#bfd7fd', end: '#bfd7fd' }
+                : { start: '#0033A0', end: '#0056b3' };
+            const textColor = isLightMode ? '#0033A0' : 'white';
+            
             let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <linearGradient id="metricsGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#0033A0;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#0056b3;stop-opacity:1" />
+                        <stop offset="0%" style="stop-color:${gradientColors.start};stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:${gradientColors.end};stop-opacity:1" />
                     </linearGradient>
                 </defs>`;
                 
@@ -670,12 +691,12 @@
                 // Value text
                 svg += `<text x="${x + cardWidth/2}" y="${y + 50}" text-anchor="middle" 
                         font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="32" 
-                        fill="white" font-weight="bold">${metric.value}</text>`;
+                        fill="${textColor}" font-weight="bold">${metric.value}</text>`;
                 
                 // Label text
                 svg += `<text x="${x + cardWidth/2}" y="${y + 80}" text-anchor="middle" 
                         font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="14" 
-                        fill="white" opacity="0.9">${metric.label}</text>`;
+                        fill="${textColor}" opacity="0.9">${metric.label}</text>`;
             });
             
             svg += '</svg>';
@@ -741,22 +762,33 @@
             // Formato 4:5 (alto 4, largo 5)
             const svgHeight = 400;
             const svgWidth = 500;
-            const margin = { top: 60, right: 30, bottom: 120, left: 60 }; // Increased bottom margin for logos
+            const margin = { top: 60, right: 30, bottom: 100, left: 60 }; // Adjusted bottom margin for better spacing
             const chartWidth = svgWidth - margin.left - margin.right;
             const chartHeight = svgHeight - margin.top - margin.bottom;
             
             const barWidth = chartWidth / data.length * 0.7;
             const barSpacing = chartWidth / data.length * 0.3;
             
+            // Colors based on mode
+            const gradientColors = isLightMode 
+                ? { 
+                    gradient1: { start: '#bfd7fd', end: '#bfd7fd' },
+                    gradient2: { start: '#bfd7fd', end: '#bfd7fd' }
+                }
+                : { 
+                    gradient1: { start: '#FFD800', end: '#ffed4a' },
+                    gradient2: { start: '#0033A0', end: '#0056b3' }
+                };
+            
             let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <linearGradient id="gradient1" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#FFD800;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#ffed4a;stop-opacity:1" />
+                        <stop offset="0%" style="stop-color:${gradientColors.gradient1.start};stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:${gradientColors.gradient1.end};stop-opacity:1" />
                     </linearGradient>
                     <linearGradient id="gradient2" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#0033A0;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#0056b3;stop-opacity:1" />
+                        <stop offset="0%" style="stop-color:${gradientColors.gradient2.start};stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:${gradientColors.gradient2.end};stop-opacity:1" />
                     </linearGradient>
                 </defs>`;
                 
@@ -795,7 +827,7 @@
                 // Add social logo
                 const logoName = item.name.toLowerCase();
                 const logo = socialLogos[logoName] || socialLogos['sconosciuto'];
-                const logoY = svgHeight - 50;
+                const logoY = svgHeight - 40;
                 svg += `<g transform="translate(${x + barWidth/2 - 10}, ${logoY})">${logo}</g>`;
             });
             
@@ -979,6 +1011,37 @@
 </html>`;
 
             return htmlContent;
+        }
+
+        // Toggle between normal and light mode
+        function toggleLightMode() {
+            isLightMode = !isLightMode;
+            const btn = document.getElementById('lightModeBtn');
+            
+            if (isLightMode) {
+                btn.innerHTML = `
+                    <span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                            <path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                        </svg>
+                    </span>
+                    <span>Modalità Normale</span>
+                `;
+            } else {
+                btn.innerHTML = `
+                    <span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                            <path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                        </svg>
+                    </span>
+                    <span>Modalità Light</span>
+                `;
+            }
+            
+            // Regenerate charts and metrics if data is available
+            if (campaignData) {
+                generateCharts(campaignData);
+            }
         }
 
         // Event listeners
