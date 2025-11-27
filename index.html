@@ -878,7 +878,7 @@
             return cleanL.split(';')
                 .map(s => s.trim())
                 .filter(s => s.length > 0 && s !== "nan");
-        }
+    }
 
         function generateList(title, obj) {
             const entries = Object.entries(obj)
@@ -1325,22 +1325,25 @@
                 if (displayName.length > 15) displayName = displayName.substring(0, 13) + '..';
 
                 const labelX = x + barWidth/2;
-                const labelY = svgHeight - 60;
                 
-                // Platforms have rotated labels
-                svg += `<text x="${labelX}" y="${labelY}" text-anchor="end" 
-                        transform="rotate(-45, ${labelX}, ${labelY})"
+                // Add Logo
+                const logoName = item.name.toLowerCase();
+                const logoSet = isColorLogoMode ? socialLogosColor : socialLogos;
+                const logo = logoSet[logoName] || logoSet['sconosciuto'];
+                
+                // Bottom align logo
+                const logoY = svgHeight - 40; 
+                // Place text above logo
+                const labelY = logoY - 15;
+                
+                // Platforms have horizontal labels above logo
+                svg += `<text x="${labelX}" y="${labelY}" text-anchor="middle" 
                         font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="12" 
                         fill="#0033A0" font-weight="600">
                         ${displayName}
                         <title>${item.name}</title>
                         </text>`;
                 
-                // Add Logo
-                const logoName = item.name.toLowerCase();
-                const logoSet = isColorLogoMode ? socialLogosColor : socialLogos;
-                const logo = logoSet[logoName] || logoSet['sconosciuto'];
-                const logoY = svgHeight - 45; 
                 svg += `<g transform="translate(${x + barWidth/2 - 10}, ${logoY})">${logo}</g>`;
             });
             
