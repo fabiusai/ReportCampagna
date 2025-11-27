@@ -25,6 +25,8 @@
             background: linear-gradient(135deg, #FFD800 0%, #ffed4a 100%);
             padding: 30px 20px;
             box-shadow: 0 4px 20px rgba(255, 216, 0, 0.3);
+            position: relative;
+            z-index: 10;
         }
 
         header h1 {
@@ -43,11 +45,79 @@
             opacity: 0.8;
         }
 
+        /* Tabs Navigation */
+        .tabs-container {
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 24px;
+            background: white;
+            border: 2px solid #0033A0;
+            color: #0033A0;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            background: #f0f4ff;
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: #0033A0;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 51, 160, 0.3);
+        }
+
+        .tab-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            border-color: #ccc;
+            color: #999;
+            background: #f9f9f9;
+        }
+        
+        .tab-btn.disabled:hover {
+            transform: none;
+            background: #f9f9f9;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* Container */
         .container {
             max-width: 1200px;
             margin: 20px auto;
             padding: 20px;
+            min-height: calc(100vh - 200px);
         }
 
         /* Section Styling */
@@ -68,6 +138,44 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .section-title-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Controls Toolbar */
+        .controls-toolbar {
+            display: flex;
+            gap: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #0033A0;
+            font-size: 0.9em;
+        }
+
+        input[type="range"] {
+            width: 150px;
+            cursor: pointer;
         }
 
         /* File Upload Styling */
@@ -206,11 +314,9 @@
             transition: all 0.3s ease;
         }
 
-        /* MODIFICA: Stile per le metriche in light-mode, come da immagine */
         .metric-card.light-mode {
             background: #ffffff;
             color: #333;
-            /* MODIFICA: Bordo ulteriormente scurito */
             border: 1px solid #adb5bd;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
         }
@@ -221,7 +327,6 @@
             margin-bottom: 8px;
         }
         
-        /* MODIFICA: Colore del valore numerico in light-mode */
         .metric-card.light-mode .metric-value {
             color: #0033A0;
         }
@@ -237,6 +342,11 @@
             grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 25px;
             margin-top: 30px;
+        }
+        
+        /* New class for full width charts */
+        .chart-wrapper.full-width {
+            grid-column: 1 / -1;
         }
 
         .chart-wrapper {
@@ -256,7 +366,7 @@
 
         .chart {
             width: 100%;
-            height: 400px;
+            overflow-x: auto;
         }
 
         .export-section {
@@ -286,33 +396,107 @@
         .hidden {
             display: none;
         }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+        }
+
+        /* MODAL STYLES */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); 
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; 
+            padding: 30px;
+            border: 1px solid #888;
+            width: 90%; 
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal h3 {
+            color: #0033A0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #FFD800;
+            padding-bottom: 10px;
+        }
+
+        .topic-edit-list {
+            max-height: 60vh;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .topic-edit-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .topic-edit-item label {
+            flex: 1;
+            font-weight: 500;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .topic-edit-item input {
+            flex: 1.5;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+        
+        .topic-edit-item input:focus {
+            border-color: #0033A0;
+            outline: none;
+        }
 
         /* Responsive Design */
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            
-            header h1 {
-                font-size: 1.8em;
-            }
-            
-            .section {
-                padding: 20px;
-            }
-            
-            .charts-container {
-                grid-template-columns: 1fr;
-            }
-            
-            button {
-                width: 100%;
-                margin-right: 0;
-            }
-            
-            .metrics-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            }
+            .container { padding: 15px; }
+            header h1 { font-size: 1.8em; }
+            .section { padding: 20px; }
+            .charts-container { grid-template-columns: 1fr; }
+            button { width: 100%; margin-right: 0; }
+            .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+            .tabs-container { overflow-x: auto; justify-content: flex-start; padding-bottom: 10px; }
+            .tab-btn { white-space: nowrap; flex-shrink: 0; }
+            .modal-content { width: 95%; margin: 10% auto; }
+            .topic-edit-item { flex-direction: column; align-items: stretch; gap: 5px; }
+            .controls-toolbar { flex-direction: column; align-items: stretch; }
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -328,126 +512,240 @@
         <p class="header-subtitle">Strumento di analisi campagne social - Poste Italiane</p>
     </header>
 
+    <!-- Tabs Navigation Menu -->
+    <div class="tabs-container">
+        <div class="tab-btn active" onclick="switchTab('tab-upload')" id="btn-upload">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/>
+            </svg>
+            Caricamento Dati
+        </div>
+        <div class="tab-btn disabled" onclick="switchTab('tab-report')" id="btn-report">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,12L8,16H10.5V19H13.5V16H16L12,12Z"/>
+            </svg>
+            Report Testuale
+        </div>
+        <div class="tab-btn disabled" onclick="switchTab('tab-analytics')" id="btn-analytics">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z"/>
+            </svg>
+            Analisi Piattaforme
+        </div>
+        <div class="tab-btn disabled" onclick="switchTab('tab-topics')" id="btn-topics">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17,14H19V17H22V19H19V22H17V19H14V17H17V14M11,16L2,9L11,2L20,9L11,16M11,18.54L12,17.75V18C12,18.71 12.16,19.39 12.45,20L11,21.07L2,14.07L3.62,12.81L11,18.54Z"/>
+            </svg>
+            Analisi per Argomenti
+        </div>
+    </div>
+
     <div class="container">
-        <div class="section">
-            <h2 class="section-title">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="#0033A0">
-                    <path d="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z"/>
-                </svg>
-                Carica il file Excel
-            </h2>
-            <div class="upload-section" id="uploadArea">
-                <div style="font-size: 3rem; margin-bottom: 15px; color: #0033A0;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="#0033A0">
-                        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,12L8,16H10.5V19H13.5V16H16L12,12Z"/>
-                    </svg>
+        
+        <!-- Tab 1: Caricamento -->
+        <div id="tab-upload" class="tab-content active">
+            <div class="section">
+                <h2 class="section-title">
+                    <div class="section-title-content">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#0033A0">
+                            <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/>
+                        </svg>
+                        Carica il file Excel
+                    </div>
+                </h2>
+                <div class="upload-section" id="uploadArea">
+                    <div style="font-size: 3rem; margin-bottom: 15px; color: #0033A0;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="#0033A0">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,12L8,16H10.5V19H13.5V16H16L12,12Z"/>
+                        </svg>
+                    </div>
+                    <p><strong>Trascina qui il file Excel</strong></p>
+                    <p>oppure clicca per selezionare (.xlsx)</p>
+                    <input type="file" id="file-input" accept=".xlsx" />
                 </div>
-                <p><strong>Trascina qui il file Excel</strong></p>
-                <p>oppure clicca per selezionare (.xlsx)</p>
-                <input type="file" id="file-input" accept=".xlsx" />
-            </div>
-            
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-                <button id="copy-btn" class="secondary-btn">
-                    <span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                            <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
-                        </svg>
-                    </span>
-                    <span>Copia Testo</span>
-                </button>
-                <button id="download-btn">
-                    <span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M10,10H11V13H10V10M13,10H14V13H13V10M9,9.5V13.5L12,16.5L15,13.5V9.5L12,12.5L9,9.5Z"/>
-                        </svg>
-                    </span>
-                    <span>Scarica Word</span>
-                </button>
-                <button id="download-html-btn" class="secondary-btn">
-                    <span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                            <path d="M12,17.56L16.07,16.43L16.62,10.33H9.38L9.2,8.3H16.8L17,6.31H7L7.56,12.32H14.45L14.22,14.9L12,15.5L9.78,14.9L9.64,13.24H7.64L7.93,16.43L12,17.56M4.07,3H19.93L18.5,19.2L12,21L5.5,19.2L4.07,3Z"/>
-                        </svg>
-                    </span>
-                    <span>Scarica HTML</span>
-                </button>
+                <p style="text-align: center; color: #666;">Carica il file per sbloccare le schede di analisi.</p>
             </div>
         </div>
 
-        <div class="section">
-            <h2 class="section-title">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="#0033A0">
-                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,12L8,16H10.5V19H13.5V16H16L12,12Z"/>
-                </svg>
-                Report Testuale
-            </h2>
-            <div id="report">Il report verrà generato qui...</div>
+        <!-- Tab 2: Report Testuale -->
+        <div id="tab-report" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">
+                    <div class="section-title-content">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#0033A0">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,12L8,16H10.5V19H13.5V16H16L12,12Z"/>
+                        </svg>
+                        Report Testuale Generato
+                    </div>
+                </h2>
+                
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <button id="copy-btn" class="secondary-btn">
+                        <span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                                <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
+                            </svg>
+                        </span>
+                        <span>Copia Testo</span>
+                    </button>
+                    <button id="download-btn">
+                        <span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                                <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M10,10H11V13H10V10M13,10H14V13H13V10M9,9.5V13.5L12,16.5L15,13.5V9.5L12,12.5L9,9.5Z"/>
+                            </svg>
+                        </span>
+                        <span>Scarica Word</span>
+                    </button>
+                    <button id="download-html-btn" class="secondary-btn">
+                        <span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                                <path d="M12,17.56L16.07,16.43L16.62,10.33H9.38L9.2,8.3H16.8L17,6.31H7L7.56,12.32H14.45L14.22,14.9L12,15.5L9.78,14.9L9.64,13.24H7.64L7.93,16.43L12,17.56M4.07,3H19.93L18.5,19.2L12,21L5.5,19.2L4.07,3Z"/>
+                            </svg>
+                        </span>
+                        <span>Scarica HTML</span>
+                    </button>
+                </div>
+                
+                <div id="report">In attesa del caricamento file...</div>
+            </div>
         </div>
 
-        <div id="analyticsSection" class="hidden">
-            <div class="section">
-                <h2 class="section-title">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#0033A0">
-                        <path d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z"/>
-                    </svg>
-                    Metriche Generali
-                </h2>
-                <div class="metrics-grid" id="metricsGrid"></div>
-                <div class="export-section">
-                    <button class="secondary-btn" onclick="toggleLightMode()" id="lightModeBtn">
-                        <span>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                                <path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+        <!-- Tab 3: Analisi Piattaforme (Esistente) -->
+        <div id="tab-analytics" class="tab-content">
+            <div id="analyticsSection">
+                <div class="section">
+                    <h2 class="section-title">
+                        <div class="section-title-content">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#0033A0">
+                                <path d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z"/>
                             </svg>
-                        </span>
-                        <span>Modalità Light</span>
-                    </button>
-                    <button class="secondary-btn" id="exportMetricsBtn">
-                        <span>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                                <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                            Metriche Generali
+                        </div>
+                    </h2>
+                    <div class="metrics-grid" id="metricsGrid"></div>
+                    <div class="export-section">
+                        <button class="secondary-btn" onclick="toggleLightMode()" id="lightModeBtn">
+                            <span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                                    <path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                                </svg>
+                            </span>
+                            <span>Modalità Light</span>
+                        </button>
+                        <button class="secondary-btn" id="exportMetricsBtn">
+                            <span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                                    <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                                </svg>
+                            </span>
+                            <span>Esporta Metriche SVG</span>
+                        </button>
+                        <button class="secondary-btn" id="exportMetricsPngBtn">
+                            <span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                                    <path d="M21.5,4H2.5C2.22,4 2,4.22 2,4.5V19.5C2,19.78 2.22,20 2.5,20H21.5C21.78,20 22,19.78 22,19.5V4.5C22,4.22 21.78,4 21.5,4M20,18H4V6H20V18M18,10L15,14H11L9,12L6,16H18L18,10Z" />
+                                </svg>
+                            </span>
+                            <span>Esporta Metriche PNG</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2 class="section-title">
+                        <div class="section-title-content">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="#0033A0">
+                                <path d="M7,2V13H10V22L17,10H13L17,2H7Z"/>
                             </svg>
-                        </span>
-                        <span>Esporta Metriche SVG</span>
-                    </button>
-                    <button class="secondary-btn" id="exportMetricsPngBtn">
-                        <span>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                                <path d="M21.5,4H2.5C2.22,4 2,4.22 2,4.5V19.5C2,19.78 2.22,20 2.5,20H21.5C21.78,20 22,19.78 22,19.5V4.5C22,4.22 21.78,4 21.5,4M20,18H4V6H20V18M18,10L15,14H11L9,12L6,16H18L18,10Z" />
-                            </svg>
-                        </span>
-                        <span>Esporta Metriche PNG</span>
-                    </button>
+                            Grafici per Piattaforma
+                        </div>
+                    </h2>
+                    <div class="charts-container" id="chartsContainer"></div>
+                    <div class="export-section">
+                        <button class="secondary-btn" id="toggleLogosBtn">
+                            <span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                                    <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-3.58-8-8-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9s1.5.67 1.5 1.5S7.33 12 6.5 12zm3 3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                                </svg>
+                            </span>
+                            <span>Loghi Colorati</span>
+                        </button>
+                        <button class="secondary-btn" id="exportAllBtn">
+                            <span>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                                    <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                                </svg>
+                            </span>
+                            <span>Esporta Tutti i Grafici SVG</span>
+                        </button>
+                    </div>
                 </div>
             </div>
+        </div>
 
+        <!-- Tab 4: Analisi per Argomenti (Nuovo) -->
+        <div id="tab-topics" class="tab-content">
             <div class="section">
                 <h2 class="section-title">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#0033A0">
-                        <path d="M7,2V13H10V22L17,10H13L17,2H7Z"/>
-                    </svg>
-                    Grafici di Analisi
+                    <div class="section-title-content">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#0033A0">
+                            <path d="M17,14H19V17H22V19H19V22H17V19H14V17H17V14M11,16L2,9L11,2L20,9L11,16M11,18.54L12,17.75V18C12,18.71 12.16,19.39 12.45,20L11,21.07L2,14.07L3.62,12.81L11,18.54Z"/>
+                        </svg>
+                        Analisi per Argomenti
+                    </div>
+                    
+                    <button class="secondary-btn" onclick="openTopicEditor()">
+                        <span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                                <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+                            </svg>
+                        </span>
+                        <span>Modifica Nomi Argomenti</span>
+                    </button>
                 </h2>
-                <div class="charts-container" id="chartsContainer"></div>
-                <div class="export-section">
-                    <button class="secondary-btn" id="toggleLogosBtn">
-                        <span>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-3.58-8-8-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9s1.5.67 1.5 1.5S7.33 12 6.5 12zm3 3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                            </svg>
-                        </span>
-                        <span>Loghi Colorati</span>
-                    </button>
-                    <button class="secondary-btn" id="exportAllBtn">
-                        <span>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                                <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
-                            </svg>
-                        </span>
-                        <span>Esporta Tutti i Grafici SVG</span>
-                    </button>
+                
+                <!-- TOOLBAR DI CONTROLLO -->
+                <div class="controls-toolbar">
+                    <div class="control-group">
+                        <label for="fontSizeControl">Dimensione Font:</label>
+                        <input type="range" id="fontSizeControl" min="10" max="30" value="16" oninput="updateChartSettings()">
+                        <span id="fontSizeDisplay">16px</span>
+                    </div>
+                    <div class="control-group">
+                        <label for="barGapControl">Spaziatura (Interlinea):</label>
+                        <input type="range" id="barGapControl" min="10" max="100" value="30" oninput="updateChartSettings()">
+                        <span id="barGapDisplay">30px</span>
+                    </div>
+                    <div class="control-group">
+                        <label for="textWidthControl">Larghezza Testo:</label>
+                        <input type="range" id="textWidthControl" min="200" max="1200" value="800" step="50" oninput="updateChartSettings()">
+                        <span id="textWidthDisplay">800px</span>
+                    </div>
                 </div>
+
+                <p style="margin-bottom: 20px; color: #666;">
+                    Analisi basata sui tag rilevati nel campo "Labels". Usa i controlli sopra per adattare i grafici alle tue slide.
+                </p>
+                <div class="charts-container" id="topicsChartsContainer">
+                    <!-- Charts will be injected here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal per editare i topic -->
+    <div id="topicModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeTopicEditor()">&times;</span>
+            <h3>Modifica Nomi Argomenti</h3>
+            <p style="margin-bottom: 15px; font-size: 0.9em; color: #666;">Modifica i nomi degli argomenti come verranno visualizzati nei grafici.</p>
+            <div id="topicEditorList" class="topic-edit-list">
+                <!-- Lista generata dinamicamente -->
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="secondary-btn" onclick="closeTopicEditor()" style="margin-right: 10px;">Annulla</button>
+                <button onclick="saveTopicNames()">Salva Modifiche</button>
             </div>
         </div>
     </div>
@@ -455,11 +753,60 @@
     <script>
         let latestHtml = "";
         let campaignData = null;
+        let topicsData = null;
+        let topicRenames = {}; 
         let campaignLabel = "";
         let isLightMode = false;
-        let isColorLogoMode = false; // NUOVA VARIABILE DI STATO
+        let isColorLogoMode = false;
+        
+        // Impostazioni globali per i grafici degli argomenti
+        let topicChartSettings = {
+            fontSize: 16,
+            barGap: 30,
+            textWidth: 800
+        };
 
-        // Social media logos SVG - all in Poste blue color
+        function updateChartSettings() {
+            const fs = document.getElementById('fontSizeControl').value;
+            const bg = document.getElementById('barGapControl').value;
+            const tw = document.getElementById('textWidthControl').value;
+            
+            topicChartSettings.fontSize = parseInt(fs);
+            topicChartSettings.barGap = parseInt(bg);
+            topicChartSettings.textWidth = parseInt(tw);
+            
+            document.getElementById('fontSizeDisplay').innerText = fs + 'px';
+            document.getElementById('barGapDisplay').innerText = bg + 'px';
+            document.getElementById('textWidthDisplay').innerText = tw + 'px';
+            
+            if (topicsData) {
+                generateTopicCharts();
+            }
+        }
+
+        // --- TAB NAVIGATION LOGIC ---
+        function switchTab(tabId) {
+            const btn = document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`);
+            if (btn.classList.contains('disabled')) return;
+
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+
+        function enableTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('disabled');
+            });
+        }
+
+        // --- EXISTING CONSTANTS ---
         const socialLogos = {
             facebook: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
             instagram: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0 3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0 3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/></svg>`,
@@ -471,7 +818,6 @@
             sconosciuto: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><circle cx="12" cy="12" r="10" stroke="#0033A0" stroke-width="2" fill="none"/><text x="12" y="16" text-anchor="middle" font-size="14" fill="#0033A0">?</text></svg>`
         };
         
-        // NUOVO: Social media logos SVG - Colori ufficiali
         const socialLogosColor = {
             facebook: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
             instagram: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#D6249F"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0 3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0 3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z"/></svg>`,
@@ -480,11 +826,9 @@
             linkedin: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0077B5"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`,
             youtube: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
             whatsapp: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.06 21.94L7.31 20.58C8.75 21.38 10.36 21.82 12.04 21.82C17.5 21.82 21.95 17.37 21.95 11.91C21.95 6.45 17.5 2 12.04 2M12.04 20.13C10.56 20.13 9.12 19.75 7.85 19.03L7.54 18.83L4.44 19.65L5.28 16.63L5.07 16.31C4.26 14.98 3.83 13.47 3.83 11.91C3.83 7.39 7.54 3.68 12.04 3.68C16.54 3.68 20.25 7.39 20.25 11.91C20.25 16.43 16.54 20.13 12.04 20.13M17.37 14.26C17.07 14.11 15.81 13.5 15.54 13.4C15.27 13.3 15.09 13.25 14.91 13.53C14.73 13.81 14.24 14.41 14.08 14.59C13.92 14.77 13.76 14.81 13.46 14.66C13.16 14.51 12.18 14.2 11.06 13.19C10.17 12.4 9.56 11.59 9.38 11.31C9.2 11.03 9.31 10.92 9.44 10.79C9.56 10.66 9.7 10.5 9.83 10.35C9.96 10.2 10.02 10.1 10.11 9.95C10.2 9.8 10.15 9.68 10.09 9.58C10.03 9.48 9.51 8.22 9.31 7.72C9.11 7.22 8.92 7.29 8.77 7.28C8.62 7.27 8.44 7.27 8.26 7.27C8.08 7.27 7.82 7.34 7.6 7.62C7.38 7.9 6.88 8.39 6.88 9.53C6.88 10.67 7.63 11.76 7.75 11.94C7.87 12.12 9.33 14.49 11.6 15.48C13.87 16.47 14.53 16.19 14.97 16.14C15.41 16.09 16.38 15.54 16.6 15.26C16.82 14.98 16.82 14.74 16.76 14.59C16.7 14.44 16.42 14.35 16.17 14.26H17.37Z"/></svg>`,
-            sconosciuto: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#6c757d"><circle cx="12" cy="12" r="10" stroke="#6c757d" stroke-width="2" fill="none"/><text x="12" y="16" text-anchor="middle" font-size="14" fill="#6c757d">?</text></svg>`
+            sconosciuto: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><circle cx="12" cy="12" r="10" stroke="#0033A0" stroke-width="2" fill="none"/><text x="12" y="16" text-anchor="middle" font-size="14" fill="#0033A0">?</text></svg>`
         };
 
-
-        // Funzioni helper (dalla versione originale)
         function capitalize(str) {
             return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
         }
@@ -500,18 +844,15 @@
             return result.replace(".", ",").replace(/,00$/, "") + "M";
         }
 
-        // MODIFICA: Aggiornata la funzione per rimuovere ",0"
         function formatNumberForCharts(num) {
             let resultStr;
             if (num >= 1000000) {
                 resultStr = (num / 1000000).toFixed(1).replace(".", ",");
-                // Rimuove ',0' finale
                 resultStr = resultStr.replace(/,0$/, ""); 
                 return resultStr + 'M';
             }
             if (num >= 1000) {
                 resultStr = (num / 1000).toFixed(1).replace(".", ",");
-                // Rimuove ',0' finale
                 resultStr = resultStr.replace(/,0$/, "");
                 return resultStr + 'K';
             }
@@ -524,6 +865,19 @@
                 label = label.replace(tag, "");
             });
             return label.replace(/;/g, "").trim();
+        }
+
+        // NUOVA FUNZIONE PER ESTRARRE ARGOMENTI MULTIPLI
+        function parseTopics(label) {
+            const tags = ["#PES", "#TER", "#ISR", "#FIL", "#EB", "#NED", "#CET", "#DEI", "#IST", "#WHA", "#ST", "#RIC"];
+            let cleanL = label;
+            tags.forEach(tag => {
+                cleanL = cleanL.split(tag).join(""); // Rimuove tutte le occorrenze
+            });
+            // Assume che il separatore sia ';'
+            return cleanL.split(';')
+                .map(s => s.trim())
+                .filter(s => s.length > 0 && s !== "nan");
         }
 
         function generateList(title, obj) {
@@ -595,6 +949,10 @@
                 const jsonData = XLSX.utils.sheet_to_json(sheet, {defval: ""});
                 generateHtmlReport(jsonData);
                 generateCharts(jsonData);
+                
+                // Enable tabs and switch to Report
+                enableTabs();
+                switchTab('tab-report');
             };
             reader.readAsBinaryString(file);
         }
@@ -606,6 +964,10 @@
             let totalViews = 0, totalInteractions = 0, totalReactions = 0, totalClicks = 0;
             let missingInstagramStories = 0;
             let whatsappPosts = 0;
+
+            // Reset topics data
+            topicsData = {};
+            topicRenames = {}; // Reset renames on new file load
 
             data.forEach(row => {
                 let platform = row["Platform"]?.toString().trim().toLowerCase() || "Sconosciuto";
@@ -619,6 +981,21 @@
                 const clicks = parseFloat(row["Post clicks"]) || 0;
                 const link = row["View on platform"]?.toString().trim();
                 const labels = row["Labels"]?.toString() || "";
+
+                // --- TOPIC EXTRACTION LOGIC ---
+                const rowTopics = parseTopics(labels);
+                rowTopics.forEach(topic => {
+                    const cleanTopic = topic;
+                    if (!topicsData[cleanTopic]) {
+                        topicsData[cleanTopic] = { posts: 0, views: 0, interactions: 0, reactions: 0, clicks: 0 };
+                    }
+                    topicsData[cleanTopic].posts++;
+                    topicsData[cleanTopic].views += views;
+                    topicsData[cleanTopic].interactions += interactions;
+                    topicsData[cleanTopic].reactions += reactions;
+                    topicsData[cleanTopic].clicks += clicks;
+                });
+                // -----------------------------
 
                 viewsByPlatform[platform] = (viewsByPlatform[platform] || 0) + views;
                 interactionsByPlatform[platform] = (interactionsByPlatform[platform] || 0) + interactions;
@@ -701,7 +1078,7 @@
 
             generateMetrics();
             generateChartsVisual();
-            document.getElementById('analyticsSection').classList.remove('hidden');
+            generateTopicCharts();
         }
 
         function generateMetrics() {
@@ -818,9 +1195,50 @@
             container.appendChild(createChartWrapper('Like e Reazioni', reactionsChart));
         }
 
-        function createChartWrapper(title, chart) {
+        // --- TOPIC CHARTS GENERATION ---
+        function generateTopicCharts() {
+            const container = document.getElementById('topicsChartsContainer');
+            container.innerHTML = '';
+
+            if (!topicsData || Object.keys(topicsData).length === 0) {
+                container.innerHTML = '<div class="empty-state">Nessun argomento multiplo rilevato nei dati.</div>';
+                return;
+            }
+
+            // Helper to prepare data, handling renames
+            const prepareTopicData = (metric) => {
+                return Object.entries(topicsData)
+                    .map(([originalName, data]) => {
+                        // Use renamed label if available, otherwise original
+                        const displayName = topicRenames[originalName] || originalName;
+                        return { name: displayName, originalName: originalName, value: data[metric] };
+                    })
+                    .filter(d => d.value > 0)
+                    .sort((a, b) => b.value - a.value);
+            };
+
+            const postsData = prepareTopicData('posts');
+            const viewsData = prepareTopicData('views');
+            const interactionsData = prepareTopicData('interactions');
+            const reactionsData = prepareTopicData('reactions');
+
+            // Use Horizontal Chart function for topics, wrapped in full-width container
+            const postsChart = createHorizontalBarChart('Post per Argomento', postsData, true);
+            const viewsChart = createHorizontalBarChart('Visualizzazioni per Argomento', viewsData);
+            const interactionsChart = createHorizontalBarChart('Interazioni per Argomento', interactionsData);
+            const reactionsChart = createHorizontalBarChart('Like/Reazioni per Argomento', reactionsData);
+
+            container.appendChild(createChartWrapper('Post per Argomento', postsChart, true));
+            container.appendChild(createChartWrapper('Visualizzazioni per Argomento', viewsChart, true));
+            container.appendChild(createChartWrapper('Interazioni per Argomento', interactionsChart, true));
+            container.appendChild(createChartWrapper('Like/Reazioni per Argomento', reactionsChart, true));
+        }
+
+        // --- CHART CREATION FUNCTIONS ---
+
+        function createChartWrapper(title, chart, isFullWidth = false) {
             const wrapper = document.createElement('div');
-            wrapper.className = 'chart-wrapper';
+            wrapper.className = `chart-wrapper ${isFullWidth ? 'full-width' : ''}`;
             wrapper.innerHTML = `
                 <div class="chart">${chart}</div>
                 <div class="export-section">
@@ -837,6 +1255,7 @@
             return wrapper;
         }
 
+        // Standard Vertical Bar Chart (For Platforms)
         function createBarChart(title, data, isPostsChart = false) {
             if (data.length === 0) {
                 return `<div style="text-align:center; padding-top:100px; color:#999;">Nessun dato da visualizzare per ${title}</div>`;
@@ -853,6 +1272,11 @@
             const barWidth = chartWidth / data.length * 0.7;
             const barSpacing = chartWidth / data.length * 0.3;
             
+            // Unique ID for gradients
+            const uniqueId = Math.random().toString(36).substr(2, 9);
+            const gradient1Id = `gradient1_${uniqueId}`;
+            const gradient2Id = `gradient2_${uniqueId}`;
+
             const gradientColors = isLightMode 
                 ? { 
                     gradient1: { start: '#c2d6fb', end: '#a8c8fc' },
@@ -863,37 +1287,33 @@
                     gradient2: { start: '#0033A0', end: '#0056b3' }
                 };
             
-            let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+            let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" preserveAspectRatio="xMidYMid meet">
                 <defs>
-                    <linearGradient id="gradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <linearGradient id="${gradient1Id}" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" style="stop-color:${gradientColors.gradient1.start};stop-opacity:1" />
                         <stop offset="100%" style="stop-color:${gradientColors.gradient1.end};stop-opacity:1" />
                     </linearGradient>
-                    <linearGradient id="gradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <linearGradient id="${gradient2Id}" x1="0%" y1="0%" x2="0%" y2="100%">
                         <stop offset="0%" style="stop-color:${gradientColors.gradient2.start};stop-opacity:1" />
                         <stop offset="100%" style="stop-color:${gradientColors.gradient2.end};stop-opacity:1" />
                     </linearGradient>
                 </defs>`;
                 
-            // Title
             svg += `<text x="${svgWidth/2}" y="30" text-anchor="middle" 
                     font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="20" 
                     fill="#0033A0" font-weight="400">${title}</text>`;
             
-            // Draw bars
             data.forEach((item, index) => {
                 const barHeight = maxValue > 0 ? (parseFloat(item.value) / maxValue) * chartHeight : 0;
                 const x = margin.left + (index * (barWidth + barSpacing));
                 const y = margin.top + (chartHeight - barHeight);
-                const gradient = index % 2 === 0 ? 'gradient1' : 'gradient2';
+                const gradientId = index % 2 === 0 ? gradient1Id : gradient2Id;
                 
                 svg += `<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" 
-                        fill="url(#${gradient})" rx="4" ry="4">
+                        fill="url(#${gradientId})" rx="4" ry="4">
                         <title>${item.name}: ${isPostsChart ? item.value : formatNumberForCharts(item.value)}</title>
                         </rect>`;
                 
-                // Value labels
-                // MODIFICA: La funzione formatNumberForCharts ora gestisce i decimali
                 const displayValue = isPostsChart ? item.value : formatNumberForCharts(item.value);
                 svg += `<text x="${x + barWidth/2}" y="${y - 8}" text-anchor="middle" 
                         font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="14" 
@@ -901,22 +1321,111 @@
                         ${displayValue}
                         </text>`;
                 
-                svg += `<text x="${x + barWidth/2}" y="${svgHeight - 65}" text-anchor="middle" 
-                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="14" 
+                let displayName = item.name;
+                if (displayName.length > 15) displayName = displayName.substring(0, 13) + '..';
+
+                const labelX = x + barWidth/2;
+                const labelY = svgHeight - 60;
+                
+                // Platforms have rotated labels
+                svg += `<text x="${labelX}" y="${labelY}" text-anchor="end" 
+                        transform="rotate(-45, ${labelX}, ${labelY})"
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="12" 
                         fill="#0033A0" font-weight="600">
-                        ${item.name}
+                        ${displayName}
+                        <title>${item.name}</title>
                         </text>`;
                 
+                // Add Logo
                 const logoName = item.name.toLowerCase();
-                
-                // NUOVO: Seleziona il set di loghi (colorati o monocromo)
                 const logoSet = isColorLogoMode ? socialLogosColor : socialLogos;
                 const logo = logoSet[logoName] || logoSet['sconosciuto'];
-                
                 const logoY = svgHeight - 45; 
                 svg += `<g transform="translate(${x + barWidth/2 - 10}, ${logoY})">${logo}</g>`;
             });
             
+            svg += '</svg>';
+            return svg;
+        }
+
+        // Horizontal Bar Chart (For Topics) - Optimized for PPT (16:9 Widescreen)
+        function createHorizontalBarChart(title, data, isPostsChart = false) {
+            if (data.length === 0) {
+                return `<div style="text-align:center; padding-top:50px; color:#999;">Nessun dato da visualizzare per ${title}</div>`;
+            }
+
+            // --- USER CONTROLLED SETTINGS ---
+            const fontSize = topicChartSettings.fontSize;
+            const barGap = topicChartSettings.barGap;
+            const textWidth = topicChartSettings.textWidth; // New control
+            
+            const barHeight = 12; // Very slim bars
+            
+            // Layout dimensions for 16:9 aspect ratio target
+            // Use dynamic left margin from settings
+            const margin = { top: 60, right: 100, bottom: 20, left: textWidth }; 
+            
+            // Calculate dynamic height based on spacing control
+            const chartInnerHeight = data.length * (barHeight + barGap);
+            const svgHeight = chartInnerHeight + margin.top + margin.bottom;
+            
+            // Widescreen width base
+            const svgWidth = 1600; 
+            const chartWidth = svgWidth - margin.left - margin.right;
+
+            const maxValue = Math.max(...data.map(d => parseFloat(d.value)));
+
+            // Unique ID for gradients
+            const uniqueId = Math.random().toString(36).substr(2, 9);
+            const gradientId = `gradientH_${uniqueId}`;
+            
+            const gradientColors = isLightMode 
+                ? { start: '#c2d6fb', end: '#a8c8fc' }
+                : { start: '#0033A0', end: '#0056b3' };
+
+            let svg = `<svg width="100%" height="100%" viewBox="0 0 ${svgWidth} ${svgHeight}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:${gradientColors.start};stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:${gradientColors.end};stop-opacity:1" />
+                    </linearGradient>
+                </defs>`;
+
+            // Title
+            svg += `<text x="${svgWidth/2}" y="35" text-anchor="middle" 
+                    font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="28" 
+                    fill="#0033A0" font-weight="600">${title}</text>`;
+
+            data.forEach((item, index) => {
+                const y = margin.top + index * (barHeight + barGap);
+                const barLen = maxValue > 0 ? (parseFloat(item.value) / maxValue) * chartWidth : 0;
+                
+                // Align text vertically with the bar
+                const textY = y + barHeight/2 + (fontSize/3);
+
+                // Label (Y Axis)
+                svg += `<text x="${margin.left - 20}" y="${textY}" text-anchor="end" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="${fontSize}" 
+                        fill="#333" font-weight="500">
+                        ${item.name}
+                        <title>${item.name}</title>
+                        </text>`;
+
+                // Bar
+                svg += `<rect x="${margin.left}" y="${y}" width="${barLen}" height="${barHeight}" 
+                        fill="url(#${gradientId})" rx="6" ry="6">
+                        <title>${item.name}: ${isPostsChart ? item.value : formatNumberForCharts(item.value)}</title>
+                        </rect>`;
+                
+                // Value Label
+                const displayValue = isPostsChart ? item.value : formatNumberForCharts(item.value);
+                svg += `<text x="${margin.left + barLen + 15}" y="${textY}" text-anchor="start" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="${fontSize}" 
+                        fill="#0033A0" font-weight="bold">
+                        ${displayValue}
+                        </text>`;
+            });
+
             svg += '</svg>';
             return svg;
         }
@@ -949,6 +1458,69 @@
             }, 1000);
         }
 
+        // --- MODAL FUNCTIONS ---
+
+        function openTopicEditor() {
+            const list = document.getElementById('topicEditorList');
+            list.innerHTML = '';
+            
+            if (!topicsData || Object.keys(topicsData).length === 0) {
+                list.innerHTML = '<p>Nessun argomento trovato da modificare.</p>';
+            } else {
+                // List all original topic names
+                Object.keys(topicsData).sort().forEach(originalName => {
+                    const currentName = topicRenames[originalName] || originalName;
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'topic-edit-item';
+                    
+                    const label = document.createElement('label');
+                    label.textContent = originalName;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = currentName;
+                    input.dataset.original = originalName;
+                    
+                    itemDiv.appendChild(label);
+                    itemDiv.appendChild(input);
+                    list.appendChild(itemDiv);
+                });
+            }
+
+            document.getElementById('topicModal').style.display = 'block';
+        }
+
+        function closeTopicEditor() {
+            document.getElementById('topicModal').style.display = 'none';
+        }
+
+        function saveTopicNames() {
+            const inputs = document.querySelectorAll('#topicEditorList input');
+            inputs.forEach(input => {
+                const original = input.dataset.original;
+                const newName = input.value.trim();
+                
+                if (newName && newName !== original) {
+                    topicRenames[original] = newName;
+                } else {
+                    // If changed back to original or empty, delete rename entry
+                    delete topicRenames[original];
+                }
+            });
+            
+            closeTopicEditor();
+            generateTopicCharts(); // Regenerate charts with new names
+        }
+
+        // Close modal if clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('topicModal');
+            if (event.target == modal) {
+                closeTopicEditor();
+            }
+        }
+
         // Generate HTML report with charts
         function generateHTMLReport() {
             const title = `Risultati social`;
@@ -961,139 +1533,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title} - ${subtitle}</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Avenir Next LT Pro', 'Roboto', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        h1 {
-            color: #0033A0;
-            text-align: center;
-            margin-bottom: 5px;
-            font-size: clamp(1.5em, 5vw, 2.2em);
-        }
-        
-        h2 {
-            color: #0033A0;
-            text-align: center;
-            margin-top: 0;
-            margin-bottom: 30px;
-            font-size: clamp(1.2em, 4vw, 1.8em);
-            font-weight: normal;
-        }
-        
-        .chart-container, .metrics-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-            overflow-x: auto;
-        }
-        
-        .metrics-container {
-            padding: 15px;
-        }
-        
-        svg {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 0 auto;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            
-            h1 {
-                margin-bottom: 10px;
-            }
-            
-            h2 {
-                margin-bottom: 20px;
-            }
-            
-            .chart-container, .metrics-container {
-                padding: 15px;
-                margin-bottom: 20px;
-            }
-            
-            .chart-container {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            svg {
-                min-width: 320px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            body {
-                padding: 5px;
-            }
-            
-            .chart-container, .metrics-container {
-                padding: 10px;
-                border-radius: 6px;
-            }
-        }
-        
-        /* Print styles */
-        @media print {
-            body {
-                background-color: white;
-            }
-            
-            .chart-container, .metrics-container {
-                box-shadow: none;
-                border: 1px solid #ddd;
-                page-break-inside: avoid;
-            }
-        }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; }
+        h1, h2 { color: #0033A0; text-align: center; }
+        .chart-container { margin-bottom: 30px; text-align: center; }
+        svg { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>${title}</h1>
         <h2>${subtitle}</h2>
-        
-        <div class="metrics-container">
-            ${window.metricsSVG}
-        </div>`;
+        <div class="chart-container">${window.metricsSVG}</div>`;
 
-            // Add all charts
+            // Add all charts from both containers
             const charts = document.querySelectorAll('.chart');
             charts.forEach((chart, index) => {
-                htmlContent += `
-        <div class="chart-container">
-            ${chart.innerHTML}
-        </div>`;
+                htmlContent += `<div class="chart-container">${chart.innerHTML}</div>`;
             });
 
-            htmlContent += `
-    </div>
-</body>
-</html>`;
-
+            htmlContent += `</div></body></html>`;
             return htmlContent;
         }
 
@@ -1102,29 +1561,16 @@
             isLightMode = !isLightMode;
             const btn = document.getElementById('lightModeBtn');
             
-            if (isLightMode) {
-                btn.innerHTML = `
-                    <span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                            <path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
-                        </svg>
-                    </span>
-                    <span>Modalità Normale</span>
-                `;
-            } else {
-                btn.innerHTML = `
-                    <span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                            <path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
-                        </svg>
-                    </span>
-                    <span>Modalità Light</span>
-                `;
-            }
+            const btnContent = isLightMode ? 
+                ['Modalità Normale', '#0033A0'] : 
+                ['Modalità Light', '#0033A0'];
+            
+            btn.innerHTML = `<span><svg width="20" height="20" viewBox="0 0 24 24" fill="${btnContent[1]}"><path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/></svg></span><span>${btnContent[0]}</span>`;
             
             if (campaignData) {
                 generateMetrics();
                 generateChartsVisual();
+                generateTopicCharts();
             }
         }
 
@@ -1139,7 +1585,6 @@
         document.getElementById("copy-btn").addEventListener("click", async function() {
             const button = this;
             const originalContent = button.innerHTML;
-            
             button.innerHTML = '<span class="loading-spinner"></span><span>Copiando...</span>';
             button.classList.add('loading');
             
@@ -1155,9 +1600,7 @@
                 } catch (err) {
                     button.innerHTML = '<span>⚠️</span><span>Errore</span>';
                     button.classList.remove('loading');
-                    alert("Copia fallita. Il browser potrebbe non supportare questa funzione.");
                 }
-                
                 setTimeout(() => {
                     button.innerHTML = originalContent;
                     button.classList.remove('success');
@@ -1168,15 +1611,11 @@
         document.getElementById("download-btn").addEventListener("click", function() {
             const button = this;
             const originalContent = button.innerHTML;
-            
             button.innerHTML = '<span class="loading-spinner"></span><span>Generando...</span>';
             button.classList.add('loading');
             
             setTimeout(() => {
-                const htmlContent = `
-<html><head><meta charset='utf-8'></head><body style="font-family:Arial; font-size:14px;">
-${latestHtml}
-</body></html>`;
+                const htmlContent = `<html><head><meta charset='utf-8'></head><body style="font-family:Arial; font-size:14px;">${latestHtml}</body></html>`;
                 const blob = new Blob([htmlContent], {type: "application/msword"});
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
@@ -1188,7 +1627,6 @@ ${latestHtml}
                 button.innerHTML = '<span>✅</span><span>Scaricato!</span>';
                 button.classList.remove('loading');
                 button.classList.add('success');
-                
                 setTimeout(() => {
                     button.innerHTML = originalContent;
                     button.classList.remove('success');
@@ -1196,17 +1634,11 @@ ${latestHtml}
             }, 1200);
         });
 
-        // Download HTML report button
         document.getElementById("download-html-btn").addEventListener("click", function() {
             const button = this;
             const originalContent = button.innerHTML;
-            
-            if (!campaignData) {
-                alert("Per favore carica prima un file Excel");
-                return;
-            }
-            
-            button.innerHTML = '<span class="loading-spinner"></span><span>Generando HTML...</span>';
+            if (!campaignData) { alert("Per favore carica prima un file Excel"); return; }
+            button.innerHTML = '<span class="loading-spinner"></span><span>Generando...</span>';
             button.classList.add('loading');
             
             setTimeout(() => {
@@ -1218,26 +1650,18 @@ ${latestHtml}
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-                
-                button.innerHTML = '<span>✅</span><span>HTML Scaricato!</span>';
+                button.innerHTML = '<span>✅</span><span>Scaricato!</span>';
                 button.classList.remove('loading');
                 button.classList.add('success');
-                
-                setTimeout(() => {
-                    button.innerHTML = originalContent;
-                    button.classList.remove('success');
-                }, 2000);
+                setTimeout(() => { button.innerHTML = originalContent; button.classList.remove('success'); }, 2000);
             }, 1500);
         });
 
-        // Export all charts functionality
         document.getElementById('exportAllBtn').addEventListener('click', function() {
             const button = this;
             const originalContent = button.innerHTML;
-            
-            button.innerHTML = '<span class="loading-spinner"></span><span>Esportazione in corso...</span>';
+            button.innerHTML = '<span class="loading-spinner"></span><span>Esportazione...</span>';
             button.classList.add('loading');
-            
             setTimeout(() => {
                 const charts = document.querySelectorAll('.chart');
                 charts.forEach((chart, index) => {
@@ -1250,57 +1674,29 @@ ${latestHtml}
                     a.click();
                     URL.revokeObjectURL(url);
                 });
-                
-                button.innerHTML = '<span>✅</span><span>Tutti i grafici esportati!</span>';
+                button.innerHTML = '<span>✅</span><span>Fatto!</span>';
                 button.classList.remove('loading');
                 button.classList.add('success');
-                
-                setTimeout(() => {
-                    button.innerHTML = originalContent;
-                    button.classList.remove('success');
-                }, 3000);
+                setTimeout(() => { button.innerHTML = originalContent; button.classList.remove('success'); }, 3000);
             }, 1500);
         });
 
-        // NUOVO: Event listener per il toggle dei loghi colorati
         document.getElementById('toggleLogosBtn').addEventListener('click', function() {
             isColorLogoMode = !isColorLogoMode;
             const btn = document.getElementById('toggleLogosBtn');
-            
-            if (isColorLogoMode) {
-                btn.innerHTML = `
-                    <span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                            <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-3.58-8-8-8zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7z"/>
-                        </svg>
-                    </span>
-                    <span>Loghi Monocromo</span>
-                `;
-            } else {
-                 btn.innerHTML = `
-                    <span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
-                            <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-3.58-8-8-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9s1.5.67 1.5 1.5S7.33 12 6.5 12zm3 3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                        </svg>
-                    </span>
-                    <span>Loghi Colorati</span>
-                `;
-            }
-            
-            // Rigenera i grafici
+            const label = isColorLogoMode ? "Loghi Monocromo" : "Loghi Colorati";
+            btn.innerHTML = `<span><svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-3.58-8-8-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9s1.5.67 1.5 1.5S7.33 12 6.5 12zm3 3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></span><span>${label}</span>`;
             if (campaignData) {
                 generateChartsVisual();
+                // Nota: i grafici per argomenti non usano loghi, quindi non serve rigenerarli
             }
         });
 
-        // Export metrics functionality
         document.getElementById('exportMetricsBtn').addEventListener('click', function() {
             const button = this;
             const originalContent = button.innerHTML;
-            
             button.innerHTML = '<span class="loading-spinner"></span><span>Esportando...</span>';
             button.classList.add('loading');
-            
             setTimeout(() => {
                 if (window.metricsSVG) {
                     const blob = new Blob([window.metricsSVG], { type: 'image/svg+xml' });
@@ -1310,58 +1706,34 @@ ${latestHtml}
                     a.download = 'metriche_generali.svg';
                     a.click();
                     URL.revokeObjectURL(url);
-                    
                     button.innerHTML = '<span>✅</span><span>Esportato!</span>';
                     button.classList.remove('loading');
                     button.classList.add('success');
-                } else {
-                    button.innerHTML = '<span>⚠️</span><span>Errore</span>';
                 }
-                button.classList.remove('loading');
-                
-                setTimeout(() => {
-                    button.innerHTML = originalContent;
-                    button.classList.remove('success');
-                }, 2000);
+                setTimeout(() => { button.innerHTML = originalContent; button.classList.remove('success'); }, 2000);
             }, 1000);
         });
         
-        // NUOVO: Export metrics as PNG functionality
         document.getElementById('exportMetricsPngBtn').addEventListener('click', function() {
             const button = this;
             const originalContent = button.innerHTML;
-
             button.innerHTML = '<span class="loading-spinner"></span><span>Generando...</span>';
             button.classList.add('loading');
-
             setTimeout(() => {
-                if (window.metricsSVG) {
-                    exportMetricsPNG(button, originalContent);
-                } else {
+                if (window.metricsSVG) exportMetricsPNG(button, originalContent);
+                else {
                     button.innerHTML = '<span>⚠️</span><span>Errore</span>';
                     button.classList.remove('loading');
-                    setTimeout(() => {
-                        button.innerHTML = originalContent;
-                    }, 2000);
+                    setTimeout(() => { button.innerHTML = originalContent; }, 2000);
                 }
             }, 1000);
         });
 
         function exportMetricsPNG(button, originalContent) {
             let svgString = window.metricsSVG;
-            
-            // Definisco e inserisco un filtro per l'ombra
-            const shadowFilter = `<filter id="drop-shadow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.1"/>
-            </filter>`;
-            if (!svgString.includes(shadowFilter)) {
-                svgString = svgString.replace('</defs>', shadowFilter + '</defs>');
-            }
-
-            // Applica il filtro al gruppo di card
-            if (!svgString.includes('filter="url(#drop-shadow)"')) {
-                svgString = svgString.replace('<g id="metric-cards-group">', '<g id="metric-cards-group" filter="url(#drop-shadow)">');
-            }
+            const shadowFilter = `<filter id="drop-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.1"/></filter>`;
+            if (!svgString.includes(shadowFilter)) svgString = svgString.replace('</defs>', shadowFilter + '</defs>');
+            if (!svgString.includes('filter="url(#drop-shadow)"')) svgString = svgString.replace('<g id="metric-cards-group">', '<g id="metric-cards-group" filter="url(#drop-shadow)">');
 
             const image = new Image();
             const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
@@ -1371,42 +1743,26 @@ ${latestHtml}
                 const canvas = document.createElement('canvas');
                 const svgWidth = parseInt(svgString.match(/width="(\d+)"/)[1]);
                 const svgHeight = parseInt(svgString.match(/height="(\d+)"/)[1]);
-                
                 canvas.width = svgWidth;
                 canvas.height = svgHeight;
-
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(image, 0, 0);
-
                 const pngUrl = canvas.toDataURL('image/png');
                 const a = document.createElement('a');
                 a.href = pngUrl;
                 a.download = 'metriche_generali.png';
                 document.body.appendChild(a);
                 a.click();
-                
-                // FIX: Ritardo la rimozione dell'elemento per garantire l'avvio del download
-                setTimeout(() => {
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }, 100);
-
+                setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
                 button.innerHTML = '<span>✅</span><span>Esportato!</span>';
                 button.classList.add('success');
-                setTimeout(() => {
-                    button.innerHTML = originalContent;
-                    button.classList.remove('success');
-                }, 2000);
+                setTimeout(() => { button.innerHTML = originalContent; button.classList.remove('success'); }, 2000);
             };
-            
             image.onerror = () => {
                  button.innerHTML = '<span>⚠️</span><span>Errore</span>';
                  button.classList.remove('loading');
-                 setTimeout(() => {
-                    button.innerHTML = originalContent;
-                 }, 2000);
+                 setTimeout(() => { button.innerHTML = originalContent; }, 2000);
             };
-            
             image.src = url;
         }
     </script>
