@@ -1075,7 +1075,7 @@
         function generateMetrics() {
             const metricsGrid = document.getElementById('metricsGrid');
             const metrics = [
-                { label: 'Post Totali', value: campaignData.totalPosts },
+                { label: 'Post Totali', value: formatNumberForCharts(campaignData.totalPosts) }, // APPLICATA FORMATTAZIONE ANCHE QUI
                 { label: 'Visualizzazioni', value: formatNumberForCharts(campaignData.totalViews) },
                 { label: 'Interazioni', value: formatNumberForCharts(campaignData.totalInteractions) },
                 { label: 'Like e Reazioni', value: formatNumberForCharts(campaignData.totalReactions) }
@@ -1300,6 +1300,7 @@
                 const y = margin.top + (chartHeight - barHeight);
                 const gradientId = index % 2 === 0 ? gradient1Id : gradient2Id;
                 
+                // RIMOSSA DISTINZIONE isPostsChart
                 const displayValue = formatNumberForCharts(item.value);
 
                 svg += `<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" 
@@ -1398,6 +1399,7 @@
                 // Align text vertically with the bar
                 const textY = y + barHeight/2 + (fontSize/3);
                 
+                // RIMOSSA DISTINZIONE isPostsChart
                 const displayValue = formatNumberForCharts(item.value);
 
                 // Label (Y Axis)
