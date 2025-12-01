@@ -1255,8 +1255,8 @@
             const maxValue = Math.max(...data.map(d => parseFloat(d.value)));
             
             const svgHeight = 400;
-            const svgWidth = 500;
-            const margin = { top: 60, right: 30, bottom: 100, left: 60 };
+            // UPDATE: Ridotto margin.bottom da 100 a 80
+            const margin = { top: 60, right: 30, bottom: 80, left: 60 };
             const chartWidth = svgWidth - margin.left - margin.right;
             const chartHeight = svgHeight - margin.top - margin.bottom;
             
@@ -1319,15 +1319,17 @@
 
                 const labelX = x + barWidth/2;
                 
+                // UPDATE: Calcolo delle posizioni basato sulla fine delle barre (baseline)
+                const axisBaseY = margin.top + chartHeight;
+                
                 // Add Logo
                 const logoName = item.name.toLowerCase();
                 const logoSet = isColorLogoMode ? socialLogosColor : socialLogos;
                 const logo = logoSet[logoName] || logoSet['sconosciuto'];
                 
-                // Bottom align logo
-                const logoY = svgHeight - 40; 
-                // Place text above logo
-                const labelY = logoY - 15;
+                // Posizionamento molto più vicino alla base delle barre
+                const labelY = axisBaseY + 15; // Testo subito sotto la linea di base
+                const logoY = axisBaseY + 25;  // Logo subito sotto il testo
                 
                 // Platforms have horizontal labels above logo
                 svg += `<text x="${labelX}" y="${labelY}" text-anchor="middle" 
