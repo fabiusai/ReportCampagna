@@ -512,7 +512,6 @@
         <p class="header-subtitle">Strumento di analisi campagne social - Poste Italiane</p>
     </header>
 
-    <!-- Tabs Navigation Menu -->
     <div class="tabs-container">
         <div class="tab-btn active" onclick="switchTab('tab-upload')" id="btn-upload">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -542,7 +541,6 @@
 
     <div class="container">
         
-        <!-- Tab 1: Caricamento -->
         <div id="tab-upload" class="tab-content active">
             <div class="section">
                 <h2 class="section-title">
@@ -567,7 +565,6 @@
             </div>
         </div>
 
-        <!-- Tab 2: Report Testuale -->
         <div id="tab-report" class="tab-content">
             <div class="section">
                 <h2 class="section-title">
@@ -610,7 +607,6 @@
             </div>
         </div>
 
-        <!-- Tab 3: Analisi Piattaforme (Esistente) -->
         <div id="tab-analytics" class="tab-content">
             <div id="analyticsSection">
                 <div class="section">
@@ -683,7 +679,6 @@
             </div>
         </div>
 
-        <!-- Tab 4: Analisi per Argomenti (Nuovo) -->
         <div id="tab-topics" class="tab-content">
             <div class="section">
                 <h2 class="section-title">
@@ -704,7 +699,6 @@
                     </button>
                 </h2>
                 
-                <!-- TOOLBAR DI CONTROLLO -->
                 <div class="controls-toolbar">
                     <div class="control-group">
                         <label for="fontSizeControl">Dimensione Font:</label>
@@ -727,22 +721,19 @@
                     Analisi basata sui tag rilevati nel campo "Labels". Usa i controlli sopra per adattare i grafici alle tue slide.
                 </p>
                 <div class="charts-container" id="topicsChartsContainer">
-                    <!-- Charts will be injected here -->
-                </div>
+                    </div>
             </div>
         </div>
 
     </div>
 
-    <!-- Modal per editare i topic -->
     <div id="topicModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeTopicEditor()">&times;</span>
             <h3>Modifica Nomi Argomenti</h3>
             <p style="margin-bottom: 15px; font-size: 0.9em; color: #666;">Modifica i nomi degli argomenti come verranno visualizzati nei grafici.</p>
             <div id="topicEditorList" class="topic-edit-list">
-                <!-- Lista generata dinamicamente -->
-            </div>
+                </div>
             <div style="text-align: right; margin-top: 20px;">
                 <button class="secondary-btn" onclick="closeTopicEditor()" style="margin-right: 10px;">Annulla</button>
                 <button onclick="saveTopicNames()">Salva Modifiche</button>
@@ -849,14 +840,12 @@
         function formatNumberForCharts(num) {
             let resultStr;
             if (num >= 1000000) {
-                resultStr = (num / 1000000).toFixed(1).replace(".", ",");
-                resultStr = resultStr.replace(/,0$/, ""); 
-                return resultStr + 'M';
+                let val = parseFloat((num / 1000000).toFixed(2));
+                return val.toString().replace(".", ",") + 'M';
             }
             if (num >= 1000) {
-                resultStr = (num / 1000).toFixed(1).replace(".", ",");
-                resultStr = resultStr.replace(/,0$/, "");
-                return resultStr + 'K';
+                let val = parseFloat((num / 1000).toFixed(2));
+                return val.toString().replace(".", ",") + 'K';
             }
             return num.toString();
         }
@@ -1311,12 +1300,13 @@
                 const y = margin.top + (chartHeight - barHeight);
                 const gradientId = index % 2 === 0 ? gradient1Id : gradient2Id;
                 
+                const displayValue = formatNumberForCharts(item.value);
+
                 svg += `<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" 
                         fill="url(#${gradientId})" rx="4" ry="4">
-                        <title>${item.name}: ${isPostsChart ? item.value : formatNumberForCharts(item.value)}</title>
+                        <title>${item.name}: ${formatNumberForCharts(item.value)}</title>
                         </rect>`;
                 
-                const displayValue = isPostsChart ? item.value : formatNumberForCharts(item.value);
                 svg += `<text x="${x + barWidth/2}" y="${y - 8}" text-anchor="middle" 
                         font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="14" 
                         fill="#333" font-weight="600">
@@ -1407,6 +1397,8 @@
                 
                 // Align text vertically with the bar
                 const textY = y + barHeight/2 + (fontSize/3);
+                
+                const displayValue = formatNumberForCharts(item.value);
 
                 // Label (Y Axis)
                 svg += `<text x="${margin.left - 20}" y="${textY}" text-anchor="end" 
@@ -1419,11 +1411,10 @@
                 // Bar
                 svg += `<rect x="${margin.left}" y="${y}" width="${barLen}" height="${barHeight}" 
                         fill="url(#${gradientId})" rx="6" ry="6">
-                        <title>${item.name}: ${isPostsChart ? item.value : formatNumberForCharts(item.value)}</title>
+                        <title>${item.name}: ${formatNumberForCharts(item.value)}</title>
                         </rect>`;
                 
                 // Value Label
-                const displayValue = isPostsChart ? item.value : formatNumberForCharts(item.value);
                 svg += `<text x="${margin.left + barLen + 15}" y="${textY}" text-anchor="start" 
                         font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="${fontSize}" 
                         fill="#0033A0" font-weight="bold">
