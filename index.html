@@ -3,659 +3,1740 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Sentiment Dashboard</title>
-    <link rel="icon" href="favicon.ico">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-
+    <title>Social Campaign Analyzer - Dashboard</title>
+    <link rel="icon" type="image/png" href="camp.png">
     <style>
         :root {
-            --brand-blue: #0146bc;
-            --brand-yellow: #eddc01;
-            --text-dark: #333333;
-            --text-light: #ffffff;
-            --bg-light: #f4f6f9;
-            --border-color: #dcdcdc;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
-            --font-legend: 'Avenir Next LT Pro', 'Avenir Next', 'Avenir', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            /* Palette Colori & Variabili Globali */
+            --primary: #00529F;
+            --primary-hover: #003e7e;
+            --background: #f4f6f8;
+            --surface: #ffffff;
+            --text-main: #2c3e50;
+            --text-secondary: #607d8b;
+            --accent-success: #27ae60;
+            --accent-success-hover: #219150;
+            --accent-warning: #f1c40f;
+            --accent-warning-hover: #d4ac0d;
+            --border: #e2e8f0;
+            --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-hover: 0 5px 15px rgba(0,0,0,0.1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Roboto', sans-serif; background-color: var(--bg-light); color: var(--text-dark); display: flex; flex-direction: column; min-height: 100vh; }
-
-        /* HEADER */
-        header { background-color: var(--brand-blue); color: var(--text-light); padding: 1rem 2rem; border-bottom: 5px solid var(--brand-yellow); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        header h1 { font-size: 1.5rem; font-weight: 500; }
-
-        /* MAIN */
-        main { flex: 1; padding: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
-        .section-title { font-size: 1.2rem; color: var(--brand-blue); margin-bottom: 1rem; border-left: 4px solid var(--brand-yellow); padding-left: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        /* UPLOAD */
-        .upload-container { background: white; padding: 2rem; border-radius: 4px; border: 1px solid var(--border-color); text-align: center; margin-bottom: 2rem; transition: border-color 0.3s; }
-        .upload-container:hover { border-color: var(--brand-blue); }
-        input[type="file"] { display: none; }
-        .custom-file-upload { display: inline-block; padding: 12px 24px; cursor: pointer; background-color: var(--brand-blue); color: white; font-weight: 500; border-radius: 2px; transition: background 0.3s; }
-        .custom-file-upload:hover { opacity: 0.9; }
-
-        /* DASHBOARD */
-        .dashboard { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-bottom: 2rem; }
-        @media (max-width: 900px) { .dashboard { grid-template-columns: 1fr; } }
-        .card-box { background: white; padding: 1.5rem; border-radius: 4px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-
-        /* CHART & LEGEND */
-        .chart-wrapper { position: relative; height: 250px; width: 100%; display: flex; justify-content: center; margin-bottom: 1rem; }
-        .custom-legend { display: flex; justify-content: center; gap: 20px; margin-top: 10px; flex-wrap: wrap; }
-        .legend-item { text-align: center; font-family: var(--font-legend); }
-        .legend-color { width: 12px; height: 12px; display: inline-block; border-radius: 50%; margin-right: 5px; }
-        .legend-label { font-size: 0.9rem; color: #555; font-weight: 500; display: block; }
-        .legend-percent { font-size: 1.2rem; font-weight: 700; color: var(--text-dark); display: block; margin-top: 2px; }
-
-        /* --- NUOVO LAYOUT FILTRI --- */
-        .filters-container {
-            background: var(--bg-light);
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        /* Riga 1: Dropdown */
-        .filters-row-top {
-            padding: 1rem;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            border-bottom: 1px solid #e1e4e8;
+        body {
+            font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            line-height: 1.6;
+            font-size: 15px;
         }
 
-        /* Riga 2: Date e Reset */
-        .filters-row-bottom {
-            padding: 10px 1rem;
-            background-color: #eef2f8; /* Colore leggermente diverso per distinguere la timeline */
+        /* --- Header Section --- */
+        header {
+            background-color: var(--primary);
+            padding: 1rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h1 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 2px;
+            font-weight: 400;
+        }
+
+        /* --- Tabs Navigation --- */
+        .tabs-container {
+            background: var(--surface);
+            padding: 0 1.5rem;
+            box-shadow: 0 1px 0 var(--border);
+            display: flex;
+            gap: 10px;
+            position: sticky;
+            top: 70px; /* Adjust based on header height */
+            z-index: 900;
+            overflow-x: auto;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -1px;
+        }
+
+        .tab-btn:hover:not(.disabled) {
+            color: var(--primary);
+            background-color: #f8fafc;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background-color: transparent;
+        }
+
+        /* Per mantenere la compatibilità con il vecchio layout a pillola,
+           se si preferisce lo stile "Button" del UI kit invece che "Tab Link": */
+        .tabs-container {
+             padding: 15px 1.5rem;
+             background: var(--surface);
+        }
+        
+        .tab-btn {
+            border: 1px solid var(--border);
+            border-radius: 6px 6px 0 0;
+            border-bottom: none;
+            background: #f8fafc;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tab-btn.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #f9f9f9;
+        }
+
+        /* --- Container --- */
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 1.5rem;
+            min-height: calc(100vh - 150px);
+        }
+
+        /* --- Components: Sections & Cards --- */
+        .section {
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-card);
+            padding: 1.5rem;
+            margin-bottom: 25px;
+            /* Rimosso border-left giallo del vecchio stile */
+            border-left: none; 
+        }
+
+        .section-title {
+            color: var(--primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .section-title-content {
+            display: flex;
+            align-items: center;
             gap: 10px;
         }
 
-        .filter-group { display: flex; flex-direction: column; gap: 4px; }
-        .filter-group label { font-size: 0.75rem; font-weight: 500; color: #666; text-transform: uppercase; }
-        
-        .filter-select { padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-dark); font-size: 0.85rem; outline: none; width: 100%; background: white; }
-        .filter-select:focus { border-color: var(--brand-blue); }
-
-        .date-inputs { display: flex; align-items: center; gap: 10px; }
-        .filter-input-date { padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 0.85rem; outline: none; color: var(--text-dark); }
-        .filter-input-date:focus { border-color: var(--brand-blue); }
-
-        .btn-reset {
-            background: none;
-            border: 1px solid var(--brand-blue);
-            color: var(--brand-blue);
-            padding: 5px 10px;
-            font-size: 0.75rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
+        .section-title svg {
+            fill: var(--primary); /* Force branding color */
         }
-        .btn-reset:hover { background: var(--brand-blue); color: white; }
 
-        /* COMMENTS LIST */
-        .comments-list { background: white; border: 1px solid var(--border-color); border-radius: 4px; max-height: 500px; overflow-y: auto; }
-        .comment-item { padding: 1rem; border-bottom: 1px solid var(--bg-light); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-        .comment-item:last-child { border-bottom: none; }
-        .comment-content { flex: 1; }
-        .comment-meta { font-size: 0.85rem; color: #666; margin-bottom: 0.5rem; display: flex; gap: 10px; align-items: center; }
+        /* --- Upload Area --- */
+        .upload-section {
+            border: 3px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 3rem 2rem;
+            text-align: center;
+            background: var(--surface);
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .upload-section:hover {
+            border-color: var(--primary);
+            background: #f0f7ff;
+        }
+
+        .upload-section.dragover {
+            border-color: var(--primary);
+            background: #e6f0fa;
+            transform: scale(1.01);
+        }
+
+        input[type="file"] {
+            display: none; /* Custom UI used instead */
+        }
+
+        /* --- Report Text Area --- */
+        #report {
+            white-space: pre-wrap;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 20px;
+            background: #f8fafc;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text-main);
+        }
+
+        #report strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        #report a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        #report a:hover {
+            text-decoration: underline;
+        }
+
+        /* --- Metrics Grid (KPI Cards) --- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            border-left: 5px solid #ddd; /* Default gray */
+            box-shadow: var(--shadow-card);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-left-color 0.2s ease;
+            text-align: left; /* UI Kit preference */
+            position: relative;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+            border-left-color: var(--primary);
+        }
+
+        /* Override specific for maintaining charts/light mode compatibility logic if needed, 
+           but enforcing UI kit look */
+        .metric-card.light-mode {
+             /* Keeps same style as base metric card in this new UI */
+             background: var(--surface);
+             color: var(--text-main);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 5px;
+            display: block;
+        }
         
-        .sentiment-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; color: white; }
-        .sentiment-positive { background-color: var(--success); }
-        .sentiment-neutral { background-color: var(--warning); color: #333; }
-        .sentiment-negative { background-color: var(--danger); }
-        .platform-icon-small { width: 14px; height: 14px; fill: #666; margin-right: 4px; vertical-align: middle; }
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
 
-        .btn { border: none; padding: 8px 16px; font-size: 0.8rem; cursor: pointer; border-radius: 2px; font-weight: 500; transition: all 0.2s; text-transform: uppercase; white-space: nowrap; }
-        .btn-editor { background-color: var(--bg-light); color: var(--brand-blue); border: 1px solid var(--brand-blue); }
-        .btn-editor:hover { background-color: var(--brand-blue); color: white; }
-        .btn-download { background-color: var(--brand-yellow); color: var(--brand-blue); }
+        /* --- Charts Container --- */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .chart-wrapper.full-width {
+            grid-column: 1 / -1;
+        }
 
-        /* MODAL */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background-color: white; padding: 2rem; border-radius: 4px; width: 90%; max-width: 600px; border-top: 5px solid var(--brand-blue); max-height: 90vh; overflow-y: auto; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .close { font-size: 1.5rem; font-weight: bold; cursor: pointer; color: #aaa; }
-        .close:hover { color: var(--text-dark); }
-        .editor-controls { margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-light); border-radius: 4px; }
-        .control-group { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .chart-wrapper {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-card);
+            /* Removed Yellow Border */
+        }
 
-        /* PREVIEW CARD */
-        #cardPreviewContainer { display: flex; justify-content: center; margin-bottom: 1.5rem; padding: 20px; background-color: #e0e0e0; border-radius: 4px; }
-        .social-card { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; gap: 15px; position: relative; overflow: hidden; transition: all 0.3s ease; }
-        .social-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background-color: var(--brand-blue); }
-        .card-header { display: flex; align-items: center; justify-content: space-between; }
-        .card-icon { width: 24px; height: 24px; fill: var(--brand-blue); }
-        .card-date { font-size: 0.8rem; color: #999; font-weight: 400; }
-        .card-body { font-size: 1.1rem; line-height: 1.5; color: #222; }
-        .card-footer { margin-top: auto; border-top: 1px solid #eee; padding-top: 10px; font-size: 0.9rem; font-weight: 500; color: var(--brand-blue); min-height: 20px; }
-        .hidden { display: none !important; }
+        .chart {
+            width: 100%;
+            overflow-x: auto;
+        }
 
-        /* Icone */
-        .icon-fb path { fill: #1877F2; }
-        .icon-ig path { fill: #E4405F; }
-        .icon-tw path { fill: #000000; }
-        .icon-generic path { fill: var(--brand-blue); }
+        /* --- Buttons & Controls --- */
+        .export-section {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            padding-top: 15px;
+            margin-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+        
+        /* Base Button */
+        button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 4px; /* Flatter look */
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            font-family: inherit;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
 
-        footer { margin-top: auto; background-color: white; border-top: 1px solid var(--border-color); padding: 1rem 2rem; text-align: center; font-size: 0.8rem; color: #888; display: flex; justify-content: space-between; }
-        .app-version { font-family: monospace; background: var(--bg-light); padding: 2px 6px; border-radius: 3px; color: var(--brand-blue); font-weight: bold; }
+        /* Primary Action Buttons */
+        button {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Secondary / Warning / Export Buttons */
+        .secondary-btn {
+            background-color: white; 
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        .secondary-btn:hover {
+            background-color: #f8fafc;
+            border-color: var(--text-secondary);
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Specific override for "Download/Export" to match UI Kit Yellow if desired, 
+           or keep clean. Let's use the UI Kit "Export" style (Yellow) for specific actions */
+        #download-btn, #exportAllBtn, #exportMetricsBtn, #exportMetricsPngBtn {
+            background-color: var(--accent-warning);
+            color: #333;
+        }
+        
+        #download-btn:hover, #exportAllBtn:hover, #exportMetricsBtn:hover, #exportMetricsPngBtn:hover {
+            background-color: var(--accent-warning-hover);
+        }
+        
+        /* Success State */
+        button.success {
+            background-color: var(--accent-success) !important;
+            color: white !important;
+        }
+
+        button.loading {
+            background-color: #cbd5e0 !important;
+            color: #666 !important;
+            cursor: wait;
+        }
+
+        button svg {
+            fill: currentColor; 
+        }
+
+        /* Controls Toolbar */
+        .controls-toolbar {
+            display: flex;
+            gap: 20px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* --- Modal --- */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 2000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(44, 62, 80, 0.6); 
+            backdrop-filter: blur(2px);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-content {
+            background-color: var(--surface);
+            margin: 5% auto; 
+            padding: 30px;
+            border: none;
+            width: 90%; 
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .modal h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .close-modal {
+            color: var(--text-secondary);
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover {
+            color: var(--text-main);
+        }
+
+        .topic-edit-item input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        
+        .topic-edit-item input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 82, 159, 0.2);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 15px; margin-top: 15px; }
+            header { padding: 10px 15px; }
+            .tabs-container { top: 60px; padding: 10px 15px; }
+            .section { padding: 15px; }
+            .charts-container { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="#ffffff" style="vertical-align: middle;">
+                    <path d="M7,2V8H2V2H7M9,2V8H16V2H9M18,2V8H22V2H18M7,10V16H2V10H7M9,10V16H16V10H9M18,10V16H22V10H18M7,18V22H2V18H7M9,18V22H16V18H9M18,18V22H22V18H18Z"/>
+                </svg>
+                Social Campaign Analyzer
+            </h1>
+            <p class="header-subtitle">Dashboard Analitica - Poste Italiane</p>
+        </div>
+    </header>
+
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('tab-upload')" id="btn-upload">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/>
+            </svg>
+            Caricamento Dati
+        </button>
+        <button class="tab-btn disabled" onclick="switchTab('tab-report')" id="btn-report">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,12L8,16H10.5V19H13.5V16H16L12,12Z"/>
+            </svg>
+            Report Testuale
+        </button>
+        <button class="tab-btn disabled" onclick="switchTab('tab-analytics')" id="btn-analytics">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M22,21H2V3H4V19H6V10H10V19H12V6H16V19H18V14H22V21Z"/>
+            </svg>
+            Analisi Piattaforme
+        </button>
+        <button class="tab-btn disabled" onclick="switchTab('tab-topics')" id="btn-topics">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17,14H19V17H22V19H19V22H17V19H14V17H17V14M11,16L2,9L11,2L20,9L11,16M11,18.54L12,17.75V18C12,18.71 12.16,19.39 12.45,20L11,21.07L2,14.07L3.62,12.81L11,18.54Z"/>
+            </svg>
+            Analisi per Argomenti
+        </button>
+    </div>
+
+    <div class="container">
+        
+        <div id="tab-upload" class="tab-content active">
+            <div class="section">
+                <h2 class="section-title">
+                    <div class="section-title-content">
+                        Importazione Dati
+                    </div>
+                </h2>
+                <div class="upload-section" id="uploadArea">
+                    <div style="font-size: 3rem; margin-bottom: 15px; color: var(--primary);">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,12L8,16H10.5V19H13.5V16H16L12,12Z"/>
+                        </svg>
+                    </div>
+                    <p style="font-size: 1.1rem; color: var(--text-main);"><strong>Trascina qui il file Excel della campagna</strong></p>
+                    <p style="color: var(--text-secondary); margin-top: 5px;">oppure clicca per sfogliare le risorse (.xlsx)</p>
+                    <input type="file" id="file-input" accept=".xlsx" />
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-report" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">
+                    <div class="section-title-content">
+                        Report Testuale Generato
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button id="copy-btn" class="secondary-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"/>
+                            </svg>
+                            Copia Testo
+                        </button>
+                        <button id="download-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20M10,10H11V13H10V10M13,10H14V13H13V10M9,9.5V13.5L12,16.5L15,13.5V9.5L12,12.5L9,9.5Z"/>
+                            </svg>
+                            Scarica Word
+                        </button>
+                        <button id="download-html-btn" class="secondary-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,17.56L16.07,16.43L16.62,10.33H9.38L9.2,8.3H16.8L17,6.31H7L7.56,12.32H14.45L14.22,14.9L12,15.5L9.78,14.9L9.64,13.24H7.64L7.93,16.43L12,17.56M4.07,3H19.93L18.5,19.2L12,21L5.5,19.2L4.07,3Z"/>
+                            </svg>
+                            Scarica HTML
+                        </button>
+                    </div>
+                </h2>
+                
+                <div id="report">In attesa del caricamento file...</div>
+            </div>
+        </div>
+
+        <div id="tab-analytics" class="tab-content">
+            <div id="analyticsSection">
+                <div class="section">
+                    <h2 class="section-title">
+                        <div class="section-title-content">
+                            KPI Generali
+                        </div>
+                        <div class="export-section" style="border:none; padding:0; margin:0;">
+                             <button class="secondary-btn" onclick="toggleLightMode()" id="lightModeBtn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+                                </svg>
+                                Modalità Light
+                            </button>
+                        </div>
+                    </h2>
+                    <div class="metrics-grid" id="metricsGrid"></div>
+                    <div class="export-section">
+                        <button class="secondary-btn" id="exportMetricsBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                            </svg>
+                            Esporta Metriche SVG
+                        </button>
+                        <button class="secondary-btn" id="exportMetricsPngBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M21.5,4H2.5C2.22,4 2,4.22 2,4.5V19.5C2,19.78 2.22,20 2.5,20H21.5C21.78,20 22,19.78 22,19.5V4.5C22,4.22 21.78,4 21.5,4M20,18H4V6H20V18M18,10L15,14H11L9,12L6,16H18L18,10Z" />
+                            </svg>
+                            Esporta Metriche PNG
+                        </button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2 class="section-title">
+                        <div class="section-title-content">
+                            Grafici per Piattaforma
+                        </div>
+                        <button class="secondary-btn" id="toggleLogosBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-3.58-8-8-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9s1.5.67 1.5 1.5S7.33 12 6.5 12zm3 3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                            </svg>
+                            Loghi Colorati
+                        </button>
+                    </h2>
+                    <div class="charts-container" id="chartsContainer"></div>
+                    <div class="export-section">
+                        <button class="secondary-btn" id="exportAllBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                            </svg>
+                            Esporta Tutti i Grafici SVG
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-topics" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">
+                    <div class="section-title-content">
+                        Analisi per Argomenti
+                    </div>
+                    
+                    <button class="secondary-btn" onclick="openTopicEditor()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"/>
+                        </svg>
+                        Modifica Nomi
+                    </button>
+                </h2>
+                
+                <div class="controls-toolbar">
+                    <div class="control-group">
+                        <label for="fontSizeControl">Dimensione Font:</label>
+                        <input type="range" id="fontSizeControl" min="10" max="30" value="16" oninput="updateChartSettings()">
+                        <span id="fontSizeDisplay">16px</span>
+                    </div>
+                    <div class="control-group">
+                        <label for="barGapControl">Spaziatura:</label>
+                        <input type="range" id="barGapControl" min="10" max="100" value="30" oninput="updateChartSettings()">
+                        <span id="barGapDisplay">30px</span>
+                    </div>
+                    <div class="control-group">
+                        <label for="textWidthControl">Larghezza Testo:</label>
+                        <input type="range" id="textWidthControl" min="200" max="1200" value="800" step="50" oninput="updateChartSettings()">
+                        <span id="textWidthDisplay">800px</span>
+                    </div>
+                </div>
+
+                <div class="charts-container" id="topicsChartsContainer">
+                    </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="topicModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeTopicEditor()">&times;</span>
+            <h3>Modifica Nomi Argomenti</h3>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">Personalizza le etichette visualizzate nei grafici esportati.</p>
+            <div id="topicEditorList" class="topic-edit-list">
+                </div>
+            <div style="text-align: right; margin-top: 25px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <button class="secondary-btn" onclick="closeTopicEditor()" style="margin-right: 10px;">Annulla</button>
+                <button onclick="saveTopicNames()">Salva Modifiche</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let latestHtml = "";
+        let campaignData = null;
+        let topicsData = null;
+        let topicRenames = {}; 
+        let campaignLabel = "";
+        let isLightMode = false;
+        let isColorLogoMode = false;
+        
+        // Impostazioni globali per i grafici degli argomenti
+        let topicChartSettings = {
+            fontSize: 16,
+            barGap: 30,
+            textWidth: 800
+        };
+
+        function updateChartSettings() {
+            const fs = document.getElementById('fontSizeControl').value;
+            const bg = document.getElementById('barGapControl').value;
+            const tw = document.getElementById('textWidthControl').value;
+            
+            topicChartSettings.fontSize = parseInt(fs);
+            topicChartSettings.barGap = parseInt(bg);
+            topicChartSettings.textWidth = parseInt(tw);
+            
+            document.getElementById('fontSizeDisplay').innerText = fs + 'px';
+            document.getElementById('barGapDisplay').innerText = bg + 'px';
+            document.getElementById('textWidthDisplay').innerText = tw + 'px';
+            
+            if (topicsData) {
+                generateTopicCharts();
+            }
+        }
+
+        // --- TAB NAVIGATION LOGIC ---
+        function switchTab(tabId) {
+            const btn = document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`);
+            if (btn.classList.contains('disabled')) return;
+
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabId).classList.add('active');
+
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+
+        function enableTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('disabled');
+            });
+        }
+
+        // --- UPDATED CONSTANTS (Uniformati all'altra app) ---
+        // Loghi Monocromo (Blu Poste #0033A0) - Usano gli stessi identici path della versione colorata per coerenza
+        const socialLogos = {
+            facebook: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.142v3.24h-1.918c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg>`,
+            instagram: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.148-4.771-1.691-4.919-4.919-.058-1.265-.069-1.645-.069-4.85s.011-3.584.069-4.85c.149-3.225 1.664-4.771 4.919-4.919 1.266-.058 1.644-.07 4.85-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98.059-1.281.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98-1.281-.058-1.689-.072-4.948-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44 1.441-.645 1.441-1.44-.645-1.44-1.441-1.44z"/></svg>`,
+            x: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.931 6.064-6.931zM17.61 20.644h2.039L6.486 3.24H4.298l13.312 17.404z"/></svg>`,
+            twitter: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.931 6.064-6.931zM17.61 20.644h2.039L6.486 3.24H4.298l13.312 17.404z"/></svg>`,
+            linkedin: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>`,
+            youtube: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
+            whatsapp: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zM12.05 20.15c-1.49 0-2.93-.4-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31c-.82-1.31-1.26-2.83-1.26-4.38 0-4.54 3.69-8.23 8.24-8.23 2.22 0 4.31.87 5.82 2.38s2.38 3.6 2.38 5.82c-.01 4.54-3.69 8.23-8.24 8.23zm4.52-6.13c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.97-.15.17-.29.19-.54.06-.25-.12-1.06-.39-2.02-1.24-.75-.66-1.25-1.48-1.4-1.73-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43s-.56-1.34-.76-1.84c-.2-.48-.41-.42-.56-.42h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.88 2.4 1 2.56.12.17 1.74 2.65 4.22 3.72.59.25 1.05.41 1.41.52.6.19 1.14.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.07-.1-.17-.16-.42-.28z"/></svg>`,
+            sconosciuto: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><circle cx="12" cy="12" r="10" stroke="#0033A0" stroke-width="2" fill="none"/><text x="12" y="16" text-anchor="middle" font-size="14" fill="#0033A0">?</text></svg>`
+        };
+        
+        // Loghi Colorati (Ufficiali Brand)
+        const socialLogosColor = {
+            facebook: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.142v3.24h-1.918c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z"/></svg>`,
+            instagram: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#E4405F"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.148-4.771-1.691-4.919-4.919-.058-1.265-.069-1.645-.069-4.85s.011-3.584.069-4.85c.149-3.225 1.664-4.771 4.919-4.919 1.266-.058 1.644-.07 4.85-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98.059-1.281.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98-1.281-.058-1.689-.072-4.948-.072zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44 1.441-.645 1.441-1.44-.645-1.44-1.441-1.44z"/></svg>`,
+            x: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#000000"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.931 6.064-6.931zM17.61 20.644h2.039L6.486 3.24H4.298l13.312 17.404z"/></svg>`,
+            twitter: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#000000"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.931 6.064-6.931zM17.61 20.644h2.039L6.486 3.24H4.298l13.312 17.404z"/></svg>`,
+            linkedin: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0A66C2"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>`,
+            youtube: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
+            whatsapp: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zM12.05 20.15c-1.49 0-2.93-.4-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31c-.82-1.31-1.26-2.83-1.26-4.38 0-4.54 3.69-8.23 8.24-8.23 2.22 0 4.31.87 5.82 2.38s2.38 3.6 2.38 5.82c-.01 4.54-3.69 8.23-8.24 8.23zm4.52-6.13c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.17.25-.64.81-.79.97-.15.17-.29.19-.54.06-.25-.12-1.06-.39-2.02-1.24-.75-.66-1.25-1.48-1.4-1.73-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43s-.56-1.34-.76-1.84c-.2-.48-.41-.42-.56-.42h-.48c-.17 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.88 2.4 1 2.56.12.17 1.74 2.65 4.22 3.72.59.25 1.05.41 1.41.52.6.19 1.14.16 1.56.1.48-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.07-.1-.17-.16-.42-.28z"/></svg>`,
+            sconosciuto: `<svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0"><circle cx="12" cy="12" r="10" stroke="#0033A0" stroke-width="2" fill="none"/><text x="12" y="16" text-anchor="middle" font-size="14" fill="#0033A0">?</text></svg>`
+        };
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        }
+
+        function formatNumber(value) {
+            if (isNaN(value)) return "0";
+            if (value < 1000) return value.toString();
+            if (value < 1000000) {
+                let result = (value / 1000).toFixed(2);
+                return result.replace(".", ",").replace(/,00$/, "") + "K";
+            }
+            let result = (value / 1000000).toFixed(2);
+            return result.replace(".", ",").replace(/,00$/, "") + "M";
+        }
+
+        function formatNumberForCharts(num) {
+            let resultStr;
+            if (num >= 1000000) {
+                let val = parseFloat((num / 1000000).toFixed(2));
+                return val.toString().replace(".", ",") + 'M';
+            }
+            if (num >= 1000) {
+                let val = parseFloat((num / 1000).toFixed(2));
+                return val.toString().replace(".", ",") + 'K';
+            }
+            return num.toString();
+        }
+
+        function cleanLabel(label) {
+            const tags = ["#PES", "#TER", "#ISR", "#FIL", "#EB", "#NED", "#CET", "#DEI", "#IST", "#WHA", "#ST", "#RIC"];
+            tags.forEach(tag => {
+                label = label.replace(tag, "");
+            });
+            return label.replace(/;/g, "").trim();
+        }
+
+        // NUOVA FUNZIONE PER ESTRARRE ARGOMENTI MULTIPLI
+        function parseTopics(label) {
+            const tags = ["#PES", "#TER", "#ISR", "#FIL", "#EB", "#NED", "#CET", "#DEI", "#IST", "#WHA", "#ST", "#RIC"];
+            let cleanL = label;
+            tags.forEach(tag => {
+                cleanL = cleanL.split(tag).join(""); // Rimuove tutte le occorrenze
+            });
+            // Assume che il separatore sia ';'
+            return cleanL.split(';')
+                .map(s => s.trim())
+                .filter(s => s.length > 0 && s !== "nan");
+    }
+
+        function generateList(title, obj) {
+            const entries = Object.entries(obj)
+                .filter(([_, v]) => v > 0)
+                .sort((a, b) => b[1] - a[1])
+                .map(([k, v]) => `${capitalize(k)}: ${formatNumber(v)}`)
+                .join("<br>");
+            return `<p><strong>${title}:</strong><br>${entries}</p><br>`;
+        }
+
+        function generateLinkSection(linksByPlatform, missingCount, whatsappCount) {
+            let html = "<br><strong>Link ai post:</strong><br>";
+            Object.entries(linksByPlatform).forEach(([platform, links]) => {
+                html += `<br><strong>${platform}</strong><br>`;
+                links.forEach(link => {
+                    html += `<a href="${link}" target="_blank">${link}</a><br>`;
+                });
+            });
+
+            let notes = [];
+            if (missingCount > 0) {
+                notes.push(`le ${missingCount} Instagram stories`);
+            }
+            if (whatsappCount > 0) {
+                notes.push(`i ${whatsappCount} post Whatsapp`);
+            }
+
+            if (notes.length > 0) {
+                html += `<br><em>N.B. L'elenco dei link non contiene ${notes.join(' e ')}.</em>`;
+            }
+            return html;
+        }
+
+        // Upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('file-input');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].name.endsWith('.xlsx')) {
+                processExcelFile(files[0]);
+            }
+        }
+
+        function processExcelFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = evt.target.result;
+                const workbook = XLSX.read(data, {type: 'binary'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(sheet, {defval: ""});
+                generateHtmlReport(jsonData);
+                generateCharts(jsonData);
+                
+                // Enable tabs and switch to Report
+                enableTabs();
+                switchTab('tab-report');
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        function generateHtmlReport(data) {
+            const postsByPlatform = {}, viewsByPlatform = {}, interactionsByPlatform = {},
+                  reactionsByPlatform = {}, clicksByPlatform = {}, commentsByPlatform = {},
+                  linksByPlatform = {};
+            let totalViews = 0, totalInteractions = 0, totalReactions = 0, totalClicks = 0, totalComments = 0;
+            let missingInstagramStories = 0;
+            let whatsappPosts = 0;
+
+            // Reset topics data
+            topicsData = {};
+            topicRenames = {}; // Reset renames on new file load
+
+            data.forEach(row => {
+                let platform = row["Platform"]?.toString().trim().toLowerCase() || "Sconosciuto";
+                if (platform === "twitter") platform = "x";
+                const capitalizedPlatform = platform.charAt(0).toUpperCase() + platform.slice(1);
+
+                postsByPlatform[platform] = (postsByPlatform[platform] || 0) + 1;
+                const views = parseFloat(row["Total impressions"]) || parseFloat(row["Video view count"]) || 0;
+                const interactions = parseFloat(row["Total interactions"]) || parseFloat(row["Taps forward"]) || 0;
+                const reactions = parseFloat(row["Total reactions"]) || 0;
+                const clicks = parseFloat(row["Post clicks"]) || 0;
+                // Gestione Commenti (prova diverse intestazioni comuni)
+                const comments = parseFloat(row["Comments"]) || parseFloat(row["Total comments"]) || parseFloat(row["Replies"]) || 0;
+                
+                const link = row["View on platform"]?.toString().trim();
+                const labels = row["Labels"]?.toString() || "";
+
+                // --- TOPIC EXTRACTION LOGIC ---
+                const rowTopics = parseTopics(labels);
+                rowTopics.forEach(topic => {
+                    const cleanTopic = topic;
+                    if (!topicsData[cleanTopic]) {
+                        topicsData[cleanTopic] = { posts: 0, views: 0, interactions: 0, reactions: 0, clicks: 0, comments: 0 };
+                    }
+                    topicsData[cleanTopic].posts++;
+                    topicsData[cleanTopic].views += views;
+                    topicsData[cleanTopic].interactions += interactions;
+                    topicsData[cleanTopic].reactions += reactions;
+                    topicsData[cleanTopic].clicks += clicks;
+                    topicsData[cleanTopic].comments += comments;
+                });
+                // -----------------------------
+
+                viewsByPlatform[platform] = (viewsByPlatform[platform] || 0) + views;
+                interactionsByPlatform[platform] = (interactionsByPlatform[platform] || 0) + interactions;
+                reactionsByPlatform[platform] = (reactionsByPlatform[platform] || 0) + reactions;
+                clicksByPlatform[platform] = (clicksByPlatform[platform] || 0) + clicks;
+                commentsByPlatform[platform] = (commentsByPlatform[platform] || 0) + comments;
+
+                if (link) {
+                    if (!linksByPlatform[capitalizedPlatform]) linksByPlatform[capitalizedPlatform] = [];
+                    linksByPlatform[capitalizedPlatform].push(link);
+                } else if (capitalizedPlatform === "Instagram") {
+                    missingInstagramStories++;
+                }
+
+                if (labels.includes("#WHA")) {
+                    whatsappPosts++;
+                    postsByPlatform["whatsapp"] = (postsByPlatform["whatsapp"] || 0) + 1;
+                }
+
+                totalViews += views;
+                totalInteractions += interactions;
+                totalReactions += reactions;
+                totalClicks += clicks;
+                totalComments += comments;
+            });
+
+            const totalPosts = data.length + whatsappPosts;
+            const label = cleanLabel(data.find(row => row["Labels"])?.["Labels"] || "");
+            campaignLabel = label; // Store for later use
+
+            const html =
+                `Risultati della campagna social dedicata all'argomento "${label}"<br>` +
+                `<strong>Complessivamente sono stati pubblicati ${totalPosts} post</strong>, ` +
+                `che hanno ottenuto <strong>${formatNumber(totalViews)}</strong> visualizzazioni ` +
+                `e <strong>${formatNumber(totalInteractions)}</strong> interazioni.<br>` +
+                `Nello specifico i dati sono così ripartiti tra i diversi canali:<br><br>` +
+                generateList("Numero post", postsByPlatform) +
+                generateList("Visualizzazioni", viewsByPlatform) +
+                generateList("Interazioni", interactionsByPlatform) +
+                generateList("Like e reazioni", reactionsByPlatform) +
+                generateList("Commenti", commentsByPlatform) +
+                generateList("Click", clicksByPlatform) +
+                generateLinkSection(linksByPlatform, missingInstagramStories, whatsappPosts);
+
+            latestHtml = html;
+            document.getElementById("report").innerHTML = html;
+
+            // Store data for charts
+            campaignData = {
+                totalPosts: totalPosts,
+                totalViews,
+                totalInteractions,
+                totalReactions,
+                totalClicks,
+                totalComments,
+                platforms: {}
+            };
+
+            Object.keys(postsByPlatform).forEach(platform => {
+                if (platform === 'whatsapp') return; 
+                
+                campaignData.platforms[platform] = {
+                    posts: postsByPlatform[platform] || 0,
+                    views: viewsByPlatform[platform] || 0,
+                    interactions: interactionsByPlatform[platform] || 0,
+                    reactions: reactionsByPlatform[platform] || 0,
+                    clicks: clicksByPlatform[platform] || 0,
+                    comments: commentsByPlatform[platform] || 0
+                };
+            });
+            
+            if (whatsappPosts > 0) {
+                campaignData.platforms["whatsapp"] = {
+                    posts: whatsappPosts,
+                    views: 0,
+                    interactions: 0,
+                    reactions: 0,
+                    clicks: 0,
+                    comments: 0
+                };
+            }
+        }
+
+        function generateCharts(data) {
+            if (!campaignData) return;
+
+            generateMetrics();
+            generateChartsVisual();
+            generateTopicCharts();
+        }
+
+        function generateMetrics() {
+            const metricsGrid = document.getElementById('metricsGrid');
+            const metrics = [
+                { label: 'Post Totali', value: formatNumberForCharts(campaignData.totalPosts) }, 
+                { label: 'Visualizzazioni', value: formatNumberForCharts(campaignData.totalViews) },
+                { label: 'Interazioni', value: formatNumberForCharts(campaignData.totalInteractions) },
+                { label: 'Like e Reazioni', value: formatNumberForCharts(campaignData.totalReactions) },
+                { label: 'Commenti', value: formatNumberForCharts(campaignData.totalComments) }
+            ];
+
+            const metricsHtml = metrics.map(metric => `
+                <div class="metric-card${isLightMode ? ' light-mode' : ''}">
+                    <div class="metric-value">${metric.value}</div>
+                    <div class="metric-label">${metric.label}</div>
+                </div>
+            `).join('');
+            
+            metricsGrid.innerHTML = metricsHtml;
+            
+            // Create SVG version of metrics for export
+            createMetricsSVG(metrics);
+        }
+
+        function createMetricsSVG(metrics) {
+            const svgWidth = 900; // Increased width for extra card
+            const svgHeight = 250; 
+            const cardWidth = 160; // Slightly smaller to fit
+            const cardHeight = 120;
+            const spacing = 15;
+            const startX = (svgWidth - (metrics.length * cardWidth + (metrics.length - 1) * spacing)) / 2;
+            const startY = 45;
+            
+            const cardFill = isLightMode ? '#ffffff' : 'url(#metricsGradient)';
+            const cardStroke = isLightMode ? `stroke="${'#adb5bd'}" stroke-width="1"` : '';
+            const valueColor = isLightMode ? '#0033A0' : 'white';
+            const labelColor = isLightMode ? '#333333' : 'white';
+            
+            let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="metricsGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#0033A0;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#0056b3;stop-opacity:1" />
+                    </linearGradient>
+                </defs>`;
+                
+            // Title
+            svg += `<text x="${startX}" y="25" text-anchor="start" 
+                    font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="20" 
+                    fill="#0033A0" font-weight="400">Metriche Generali</text>`;
+            
+            svg += `<g id="metric-cards-group">`;
+
+            metrics.forEach((metric, index) => {
+                const x = startX + index * (cardWidth + spacing);
+                const y = startY;
+                
+                // Card background
+                svg += `<rect x="${x}" y="${y}" width="${cardWidth}" height="${cardHeight}" 
+                        fill="${cardFill}" ${cardStroke} rx="12" ry="12"/>`;
+                
+                // Value text
+                svg += `<text x="${x + cardWidth/2}" y="${y + 50}" text-anchor="middle" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="28" 
+                        fill="${valueColor}" font-weight="bold">${metric.value}</text>`;
+                
+                // Label text
+                svg += `<text x="${x + cardWidth/2}" y="${y + 80}" text-anchor="middle" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="12" 
+                        fill="${labelColor}" opacity="0.9">${metric.label}</text>`;
+            });
+            
+            svg += `</g>`;
+
+            svg += '</svg>';
+            window.metricsSVG = svg;
+        }
+
+        function generateChartsVisual() {
+            const container = document.getElementById('chartsContainer');
+            container.innerHTML = '';
+
+            // Helper to prepare data
+            const prepareData = (key) => Object.entries(campaignData.platforms)
+                .map(([name, data]) => ({ name: capitalize(name), value: data[key] }))
+                .filter(d => d.value > 0) 
+                .sort((a, b) => b.value - a.value);
+
+            const postsData = prepareData('posts');
+            const viewsData = prepareData('views');
+            const interactionsData = prepareData('interactions');
+            const reactionsData = prepareData('reactions');
+            const commentsData = prepareData('comments');
+
+            const postsChart = createBarChart('Post Pubblicati', postsData, true);
+            const viewsChart = createBarChart('Visualizzazioni', viewsData);
+            const interactionsChart = createBarChart('Interazioni', interactionsData);
+            const reactionsChart = createBarChart('Like e Reazioni', reactionsData);
+            const commentsChart = createBarChart('Commenti', commentsData);
+
+            container.appendChild(createChartWrapper('Post Pubblicati', postsChart));
+            container.appendChild(createChartWrapper('Visualizzazioni', viewsChart));
+            container.appendChild(createChartWrapper('Interazioni', interactionsChart));
+            container.appendChild(createChartWrapper('Like e Reazioni', reactionsChart));
+            container.appendChild(createChartWrapper('Commenti', commentsChart));
+        }
+
+        // --- TOPIC CHARTS GENERATION ---
+        function generateTopicCharts() {
+            const container = document.getElementById('topicsChartsContainer');
+            container.innerHTML = '';
+
+            if (!topicsData || Object.keys(topicsData).length === 0) {
+                container.innerHTML = '<div class="empty-state">Nessun argomento multiplo rilevato nei dati.</div>';
+                return;
+            }
+
+            // Helper to prepare data, handling renames
+            const prepareTopicData = (metric) => {
+                return Object.entries(topicsData)
+                    .map(([originalName, data]) => {
+                        // Use renamed label if available, otherwise original
+                        const displayName = topicRenames[originalName] || originalName;
+                        return { name: displayName, originalName: originalName, value: data[metric] };
+                    })
+                    .filter(d => d.value > 0)
+                    .sort((a, b) => b.value - a.value);
+            };
+
+            const postsData = prepareTopicData('posts');
+            const viewsData = prepareTopicData('views');
+            const interactionsData = prepareTopicData('interactions');
+            const reactionsData = prepareTopicData('reactions');
+            const commentsData = prepareTopicData('comments');
+
+            // Use Horizontal Chart function for topics, wrapped in full-width container
+            const postsChart = createHorizontalBarChart('Post per Argomento', postsData, true);
+            const viewsChart = createHorizontalBarChart('Visualizzazioni per Argomento', viewsData);
+            const interactionsChart = createHorizontalBarChart('Interazioni per Argomento', interactionsData);
+            const reactionsChart = createHorizontalBarChart('Like/Reazioni per Argomento', reactionsData);
+            const commentsChart = createHorizontalBarChart('Commenti per Argomento', commentsData);
+
+            container.appendChild(createChartWrapper('Post per Argomento', postsChart, true));
+            container.appendChild(createChartWrapper('Visualizzazioni per Argomento', viewsChart, true));
+            container.appendChild(createChartWrapper('Interazioni per Argomento', interactionsChart, true));
+            container.appendChild(createChartWrapper('Like/Reazioni per Argomento', reactionsChart, true));
+            container.appendChild(createChartWrapper('Commenti per Argomento', commentsChart, true));
+        }
+
+        // --- CHART CREATION FUNCTIONS ---
+
+        function createChartWrapper(title, chart, isFullWidth = false) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `chart-wrapper ${isFullWidth ? 'full-width' : ''}`;
+            wrapper.innerHTML = `
+                <div class="chart">${chart}</div>
+                <div class="export-section">
+                    <button class="secondary-btn" onclick="exportChart('${title.replace(/\s+/g, '_')}', this.parentElement.previousElementSibling)">
+                        <span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0033A0">
+                                <path d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z"/>
+                            </svg>
+                        </span>
+                        <span>Esporta SVG</span>
+                    </button>
+                </div>
+            `;
+            return wrapper;
+        }
+
+        // Standard Vertical Bar Chart (For Platforms)
+        function createBarChart(title, data, isPostsChart = false) {
+            if (data.length === 0) {
+                return `<div style="text-align:center; padding-top:100px; color:#999;">Nessun dato da visualizzare per ${title}</div>`;
+            }
+
+            const maxValue = Math.max(...data.map(d => parseFloat(d.value)));
+            
+            const svgHeight = 400;
+            const svgWidth = 500;
+            const margin = { top: 60, right: 30, bottom: 80, left: 60 };
+            const chartWidth = svgWidth - margin.left - margin.right;
+            const chartHeight = svgHeight - margin.top - margin.bottom;
+            
+            const barWidth = chartWidth / data.length * 0.7;
+            const barSpacing = chartWidth / data.length * 0.3;
+            
+            // Unique ID for gradients
+            const uniqueId = Math.random().toString(36).substr(2, 9);
+            const gradient1Id = `gradient1_${uniqueId}`;
+            const gradient2Id = `gradient2_${uniqueId}`;
+
+            const gradientColors = isLightMode 
+                ? { 
+                    gradient1: { start: '#c2d6fb', end: '#a8c8fc' },
+                    gradient2: { start: '#c2d6fb', end: '#a8c8fc' }
+                }
+                : { 
+                    gradient1: { start: '#FFD800', end: '#ffed4a' },
+                    gradient2: { start: '#0033A0', end: '#0056b3' }
+                };
+            
+            let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" preserveAspectRatio="xMidYMid meet">
+                <defs>
+                    <linearGradient id="${gradient1Id}" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:${gradientColors.gradient1.start};stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:${gradientColors.gradient1.end};stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="${gradient2Id}" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:${gradientColors.gradient2.start};stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:${gradientColors.gradient2.end};stop-opacity:1" />
+                    </linearGradient>
+                </defs>`;
+                
+            svg += `<text x="${svgWidth/2}" y="30" text-anchor="middle" 
+                    font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="20" 
+                    fill="#0033A0" font-weight="400">${title}</text>`;
+            
+            data.forEach((item, index) => {
+                const barHeight = maxValue > 0 ? (parseFloat(item.value) / maxValue) * chartHeight : 0;
+                const x = margin.left + (index * (barWidth + barSpacing));
+                const y = margin.top + (chartHeight - barHeight);
+                const gradientId = index % 2 === 0 ? gradient1Id : gradient2Id;
+                
+                // RIMOSSA DISTINZIONE isPostsChart
+                const displayValue = formatNumberForCharts(item.value);
+
+                svg += `<rect x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" 
+                        fill="url(#${gradientId})" rx="4" ry="4">
+                        <title>${item.name}: ${formatNumberForCharts(item.value)}</title>
+                        </rect>`;
+                
+                svg += `<text x="${x + barWidth/2}" y="${y - 8}" text-anchor="middle" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="14" 
+                        fill="#333" font-weight="600">
+                        ${displayValue}
+                        </text>`;
+                
+                let displayName = item.name;
+                if (displayName.length > 15) displayName = displayName.substring(0, 13) + '..';
+
+                const labelX = x + barWidth/2;
+                
+                // UPDATE: Calcolo delle posizioni basato sulla fine delle barre (baseline)
+                const axisBaseY = margin.top + chartHeight;
+                
+                // Add Logo
+                const logoName = item.name.toLowerCase();
+                // SELEZIONE LOGHI: Controlla la flag globale
+                const logoSet = isColorLogoMode ? socialLogosColor : socialLogos;
+                const logo = logoSet[logoName] || logoSet['sconosciuto'];
+                
+                // Posizionamento molto più vicino alla base delle barre
+                const labelY = axisBaseY + 15; // Testo subito sotto la linea di base
+                const logoY = axisBaseY + 25;  // Logo subito sotto il testo
+                
+                // Platforms have horizontal labels above logo
+                svg += `<text x="${labelX}" y="${labelY}" text-anchor="middle" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="12" 
+                        fill="#0033A0" font-weight="600">
+                        ${displayName}
+                        <title>${item.name}</title>
+                        </text>`;
+                
+                svg += `<g transform="translate(${x + barWidth/2 - 10}, ${logoY})">${logo}</g>`;
+            });
+            
+            svg += '</svg>';
+            return svg;
+        }
+
+        // Horizontal Bar Chart (For Topics) - Optimized for PPT (16:9 Widescreen)
+        function createHorizontalBarChart(title, data, isPostsChart = false) {
+            if (data.length === 0) {
+                return `<div style="text-align:center; padding-top:50px; color:#999;">Nessun dato da visualizzare per ${title}</div>`;
+            }
+
+            // --- USER CONTROLLED SETTINGS ---
+            const fontSize = topicChartSettings.fontSize;
+            const barGap = topicChartSettings.barGap;
+            const textWidth = topicChartSettings.textWidth; // New control
+            
+            const barHeight = 12; // Very slim bars
+            
+            // Layout dimensions for 16:9 aspect ratio target
+            // Use dynamic left margin from settings
+            const margin = { top: 60, right: 100, bottom: 20, left: textWidth }; 
+            
+            // Calculate dynamic height based on spacing control
+            const chartInnerHeight = data.length * (barHeight + barGap);
+            const svgHeight = chartInnerHeight + margin.top + margin.bottom;
+            
+            // Widescreen width base
+            const svgWidth = 1600; 
+            const chartWidth = svgWidth - margin.left - margin.right;
+
+            const maxValue = Math.max(...data.map(d => parseFloat(d.value)));
+
+            // Unique ID for gradients
+            const uniqueId = Math.random().toString(36).substr(2, 9);
+            const gradientId = `gradientH_${uniqueId}`;
+            
+            const gradientColors = isLightMode 
+                ? { start: '#c2d6fb', end: '#a8c8fc' }
+                : { start: '#0033A0', end: '#0056b3' };
+
+            let svg = `<svg width="100%" height="100%" viewBox="0 0 ${svgWidth} ${svgHeight}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:${gradientColors.start};stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:${gradientColors.end};stop-opacity:1" />
+                    </linearGradient>
+                </defs>`;
+
+            // Title
+            svg += `<text x="${svgWidth/2}" y="35" text-anchor="middle" 
+                    font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="28" 
+                    fill="#0033A0" font-weight="600">${title}</text>`;
+
+            data.forEach((item, index) => {
+                const y = margin.top + index * (barHeight + barGap);
+                const barLen = maxValue > 0 ? (parseFloat(item.value) / maxValue) * chartWidth : 0;
+                
+                // Align text vertically with the bar
+                const textY = y + barHeight/2 + (fontSize/3);
+                
+                // RIMOSSA DISTINZIONE isPostsChart
+                const displayValue = formatNumberForCharts(item.value);
+
+                // Label (Y Axis)
+                svg += `<text x="${margin.left - 20}" y="${textY}" text-anchor="end" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="${fontSize}" 
+                        fill="#333" font-weight="500">
+                        ${item.name}
+                        <title>${item.name}</title>
+                        </text>`;
+
+                // Bar
+                svg += `<rect x="${margin.left}" y="${y}" width="${barLen}" height="${barHeight}" 
+                        fill="url(#${gradientId})" rx="6" ry="6">
+                        <title>${item.name}: ${formatNumberForCharts(item.value)}</title>
+                        </rect>`;
+                
+                // Value Label
+                svg += `<text x="${margin.left + barLen + 15}" y="${textY}" text-anchor="start" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="${fontSize}" 
+                        fill="#0033A0" font-weight="bold">
+                        ${displayValue}
+                        </text>`;
+            });
+
+            svg += '</svg>';
+            return svg;
+        }
+
+        function exportChart(chartName, chartElement) {
+            const button = event.target.closest('button');
+            const originalContent = button.innerHTML;
+            
+            button.innerHTML = '<span class="loading-spinner"></span><span>Esportazione...</span>';
+            button.classList.add('loading');
+            
+            setTimeout(() => {
+                const svgContent = chartElement.innerHTML;
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${chartName}.svg`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                button.innerHTML = '<span>✅</span><span>Esportato!</span>';
+                button.classList.remove('loading');
+                button.classList.add('success');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('success');
+                }, 2000);
+            }, 1000);
+        }
+
+        // --- MODAL FUNCTIONS ---
+
+        function openTopicEditor() {
+            const list = document.getElementById('topicEditorList');
+            list.innerHTML = '';
+            
+            if (!topicsData || Object.keys(topicsData).length === 0) {
+                list.innerHTML = '<p>Nessun argomento trovato da modificare.</p>';
+            } else {
+                // List all original topic names
+                Object.keys(topicsData).sort().forEach(originalName => {
+                    const currentName = topicRenames[originalName] || originalName;
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'topic-edit-item';
+                    
+                    const label = document.createElement('label');
+                    label.textContent = originalName;
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = currentName;
+                    input.dataset.original = originalName;
+                    
+                    itemDiv.appendChild(label);
+                    itemDiv.appendChild(input);
+                    list.appendChild(itemDiv);
+                });
+            }
+
+            document.getElementById('topicModal').style.display = 'block';
+        }
+
+        function closeTopicEditor() {
+            document.getElementById('topicModal').style.display = 'none';
+        }
+
+        function saveTopicNames() {
+            const inputs = document.querySelectorAll('#topicEditorList input');
+            inputs.forEach(input => {
+                const original = input.dataset.original;
+                const newName = input.value.trim();
+                
+                if (newName && newName !== original) {
+                    topicRenames[original] = newName;
+                } else {
+                    // If changed back to original or empty, delete rename entry
+                    delete topicRenames[original];
+                }
+            });
+            
+            closeTopicEditor();
+            generateTopicCharts(); // Regenerate charts with new names
+        }
+
+        // Close modal if clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('topicModal');
+            if (event.target == modal) {
+                closeTopicEditor();
+            }
+        }
+
+        // Generate HTML report with charts
+        function generateHTMLReport() {
+            const title = `Risultati social`;
+            const subtitle = campaignLabel;
+            
+            let htmlContent = `<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title} - ${subtitle}</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; }
+        h1, h2 { color: #0033A0; text-align: center; }
+        .chart-container { margin-bottom: 30px; text-align: center; }
+        svg { max-width: 100%; height: auto; }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>${title}</h1>
+        <h2>${subtitle}</h2>
+        <div class="chart-container">${window.metricsSVG}</div>`;
 
-<header>
-    <h1>Social Sentiment Analyzer</h1>
-    <div style="width: 40px; height: 40px; background-color: var(--brand-yellow);"></div>
-</header>
+            // Add all charts from both containers
+            const charts = document.querySelectorAll('.chart');
+            charts.forEach((chart, index) => {
+                htmlContent += `<div class="chart-container">${chart.innerHTML}</div>`;
+            });
 
-<main>
-    <section class="upload-container">
-        <h2 style="margin-bottom: 15px; color: var(--brand-blue);">Importazione Dati</h2>
-        <p style="margin-bottom: 20px; color: #666;">Carica i file <strong>Excel (.xlsx)</strong> o <strong>CSV</strong>.<br>Il sistema cercherà automaticamente il foglio con i commenti.</p>
-        <label for="fileInput" class="custom-file-upload" id="uploadBtnLabel">
-            Seleziona File
-        </label>
-        <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" multiple>
-        <p id="fileCount" style="margin-top: 10px; font-size: 0.9rem; color: var(--brand-blue);"></p>
-        <p id="errorMsg" style="margin-top: 10px; font-size: 0.9rem; color: var(--danger); display:none;"></p>
-    </section>
-
-    <div id="appContent" class="hidden">
-        <div class="dashboard">
-            <div class="card-box">
-                <h3 class="section-title">Sentiment Overview</h3>
-                <div style="margin-bottom: 1rem;">
-                    <strong>Totale Commenti:</strong> <span id="totalComments">0</span>
-                </div>
-                <div class="chart-wrapper">
-                    <canvas id="sentimentChart"></canvas>
-                </div>
-                <div id="customLegend" class="custom-legend"></div>
-            </div>
-            
-            <div class="card-box">
-                <h3 class="section-title" style="margin-bottom: 10px;">Feed Commenti</h3>
-                
-                <div class="filters-container">
-                    <div class="filters-row-top">
-                        <div class="filter-group">
-                            <label>Sentiment</label>
-                            <select id="filterSentiment" class="filter-select">
-                                <option value="all">Tutti</option>
-                                <option value="positive">Positivi</option>
-                                <option value="neutral">Neutri</option>
-                                <option value="negative">Negativi</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Canale</label>
-                            <select id="filterPlatform" class="filter-select">
-                                <option value="all">Tutti</option>
-                                <option value="facebook">Facebook</option>
-                                <option value="instagram">Instagram</option>
-                                <option value="twitter">X (Twitter)</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Ordina per</label>
-                            <select id="sortOrder" class="filter-select">
-                                <option value="dateDesc">Data (Più recenti)</option>
-                                <option value="dateAsc">Data (Meno recenti)</option>
-                                <option value="lenDesc">Lunghezza (Lungo-Corto)</option>
-                                <option value="lenAsc">Lunghezza (Corto-Lungo)</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="filters-row-bottom">
-                        <div class="date-inputs">
-                            <label style="font-size: 0.75rem; font-weight: 500; color: #666; text-transform: uppercase;">Periodo:</label>
-                            <input type="date" id="dateStart" class="filter-input-date" placeholder="Da">
-                            <span style="font-size: 0.8rem; color:#666;">-</span>
-                            <input type="date" id="dateEnd" class="filter-input-date" placeholder="A">
-                        </div>
-                        <button class="btn-reset" id="resetFiltersBtn">Reset Filtri</button>
-                    </div>
-                </div>
-
-                <div class="comments-list" id="commentsList"></div>
-            </div>
-        </div>
-    </div>
-</main>
-
-<footer>
-    <span>Internal Use Only</span>
-    <span class="app-version">v1.5.0 Split-Filters</span>
-</footer>
-
-<div id="editorModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 style="color: var(--brand-blue);">Editor Card Social</h2>
-            <span class="close" id="closeModal">&times;</span>
-        </div>
-        <div class="editor-controls">
-            <div class="control-group">
-                <input type="checkbox" id="toggleAuthor" checked>
-                <label for="toggleAuthor" style="cursor: pointer;">Mostra Nome Autore</label>
-            </div>
-        </div>
-        <div id="cardPreviewContainer">
-            <div class="social-card" id="captureCard">
-                <div class="card-header">
-                    <svg class="card-icon" id="cardIcon" viewBox="0 0 24 24">
-                        <path d=""/>
-                    </svg>
-                    <span class="card-date" id="cardDate">DD/MM/YYYY HH:MM</span>
-                </div>
-                <div class="card-body" id="cardText">Testo...</div>
-                <div class="card-footer" id="cardAuthor">Nome Autore</div>
-            </div>
-        </div>
-        <div style="text-align: right;">
-            <button class="btn btn-download" id="downloadCardBtn">Scarica Card</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    // --- SETUP & VARS ---
-    let allComments = [];
-    let displayedComments = [];
-    let myChart = null;
-
-    // DOM Elements
-    const fileInput = document.getElementById('fileInput');
-    const uploadLabel = document.getElementById('uploadBtnLabel');
-    const fileCountDisplay = document.getElementById('fileCount');
-    const errorMsg = document.getElementById('errorMsg');
-    const appContent = document.getElementById('appContent');
-    const commentsList = document.getElementById('commentsList');
-    const totalCommentsSpan = document.getElementById('totalComments');
-    const customLegend = document.getElementById('customLegend');
-
-    // Filter DOM Elements
-    const filterSentiment = document.getElementById('filterSentiment');
-    const filterPlatform = document.getElementById('filterPlatform');
-    const sortOrder = document.getElementById('sortOrder');
-    const dateStart = document.getElementById('dateStart');
-    const dateEnd = document.getElementById('dateEnd');
-    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
-    
-    // Modal & Editor
-    const modal = document.getElementById('editorModal');
-    const closeModal = document.getElementById('closeModal');
-    const toggleAuthor = document.getElementById('toggleAuthor');
-    const cardAuthor = document.getElementById('cardAuthor');
-    const cardText = document.getElementById('cardText');
-    const cardDate = document.getElementById('cardDate');
-    const cardIcon = document.getElementById('cardIcon');
-    const downloadBtn = document.getElementById('downloadCardBtn');
-    const captureArea = document.getElementById('captureCard');
-
-    // Icons Paths
-    const icons = {
-        facebook: "M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.15 5.96C15.21 5.96 16.12 6.04 16.12 6.04V8.51H15.01C13.77 8.51 13.38 9.28 13.38 10.07V12.06H16.15L15.71 14.96H13.38V21.96C18.16 21.21 21.82 17.06 21.82 12.06C21.82 6.53 17.32 2.04 12 2.04Z",
-        instagram: "M7.8,2H16.2C19.4,2 22,4.6 22,7.8V16.2A5.8,5.8 0 0,1 16.2,22H7.8C4.6,22 2,19.4 2,16.2V7.8A5.8,5.8 0 0,1 7.8,2M7.6,4A3.6,3.6 0 0,0 4,7.6V16.4C4,18.39 5.61,20 7.6,20H16.4A3.6,3.6 0 0,0 20,16.4V7.6C20,5.61 18.39,4 16.4,4H7.6M17.25,5.5A1.25,1.25 0 0,1 18.5,6.75A1.25,1.25 0 0,1 17.25,8A1.25,1.25 0 0,1 16,6.75A1.25,1.25 0 0,1 17.25,5.5M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z",
-        twitter: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z",
-        default: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
-    };
-
-    // --- HELPER DATE ---
-    function parseDate(dateInput) {
-        let d;
-        if (typeof dateInput === 'number') {
-            const excelEpoch = new Date(1899, 11, 30);
-            d = new Date(excelEpoch.getTime() + dateInput * 86400000);
-        } else if (typeof dateInput === 'string') {
-            const parts = dateInput.split(/[\/\-\s:]/);
-            if (dateInput.includes('/')) {
-                const day = parseInt(parts[0], 10);
-                const month = parseInt(parts[1], 10) - 1;
-                const year = parseInt(parts[2], 10);
-                const hour = parseInt(parts[3], 10) || 0;
-                const min = parseInt(parts[4], 10) || 0;
-                d = new Date(year, month, day, hour, min);
-            } else {
-                d = new Date(dateInput);
-            }
-        } else {
-            d = new Date(dateInput);
+            htmlContent += `</div></body></html>`;
+            return htmlContent;
         }
-        return d;
-    }
 
-    function formatDate(dateObj) {
-        if (isNaN(dateObj.getTime())) return "N/A";
-        return dateObj.toLocaleString('it-IT', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute:'2-digit' });
-    }
+        // Toggle between normal and light mode
+        function toggleLightMode() {
+            isLightMode = !isLightMode;
+            const btn = document.getElementById('lightModeBtn');
+            
+            const btnContent = isLightMode ? 
+                ['Modalità Normale', '#0033A0'] : 
+                ['Modalità Light', '#0033A0'];
+            
+            btn.innerHTML = `<span><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/></svg></span><span>${btnContent[0]}</span>`;
+            
+            if (campaignData) {
+                generateMetrics();
+                generateChartsVisual();
+                generateTopicCharts();
+            }
+        }
 
-    function getPlatformFromLink(link) {
-        if (!link) return 'other';
-        link = String(link).toLowerCase();
-        if (link.includes('facebook')) return 'facebook';
-        if (link.includes('instagram')) return 'instagram';
-        if (link.includes('twitter') || link.includes('x.com')) return 'twitter';
-        return 'other';
-    }
+        // Event listeners
+        document.getElementById("file-input").addEventListener("change", function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processExcelFile(file);
+            }
+        });
 
-    function getPlatformIconPath(platform) {
-        if (platform === 'facebook') return icons.facebook;
-        if (platform === 'instagram') return icons.instagram;
-        if (platform === 'twitter') return icons.twitter;
-        return icons.default;
-    }
-
-    // --- FILE HANDLING ---
-    fileInput.addEventListener('change', (e) => {
-        const files = e.target.files;
-        if (files.length === 0) return;
-
-        uploadLabel.innerText = "Analisi in corso...";
-        errorMsg.style.display = 'none';
-        
-        allComments = [];
-        let filesProcessed = 0;
-
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
+        document.getElementById("copy-btn").addEventListener("click", async function() {
+            const button = this;
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<span class="loading-spinner"></span><span>Copiando...</span>';
+            button.classList.add('loading');
+            
+            setTimeout(async () => {
+                const html = document.getElementById("report").innerHTML;
+                const blob = new Blob([html], { type: "text/html" });
+                const data = [new ClipboardItem({ "text/html": blob })];
                 try {
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    
-                    let targetSheetName = workbook.SheetNames.find(name => 
-                        name.toLowerCase().includes('comment') || name.toLowerCase().includes('replies')
-                    );
-
-                    let jsonData = null;
-                    if (targetSheetName) {
-                        jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[targetSheetName], { defval: "" });
-                        if (!checkColumns(jsonData)) jsonData = null;
-                    }
-
-                    if (!jsonData) {
-                        for (const name of workbook.SheetNames) {
-                            const temp = XLSX.utils.sheet_to_json(workbook.Sheets[name], { defval: "" });
-                            if (checkColumns(temp)) {
-                                jsonData = temp;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (jsonData) processData(jsonData, file.name);
-
-                } catch (error) {
-                    console.error("Errore lettura file:", file.name, error);
+                    await navigator.clipboard.write(data);
+                    button.innerHTML = '<span>✅</span><span>Copiato!</span>';
+                    button.classList.remove('loading');
+                    button.classList.add('success');
+                } catch (err) {
+                    button.innerHTML = '<span>⚠️</span><span>Errore</span>';
+                    button.classList.remove('loading');
                 }
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('success');
+                }, 2000);
+            }, 800);
+        });
+
+        document.getElementById("download-btn").addEventListener("click", function() {
+            const button = this;
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<span class="loading-spinner"></span><span>Generando...</span>';
+            button.classList.add('loading');
+            
+            setTimeout(() => {
+                const htmlContent = `<html><head><meta charset='utf-8'></head><body style="font-family:Arial; font-size:14px;">${latestHtml}</body></html>`;
+                const blob = new Blob([htmlContent], {type: "application/msword"});
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "Report_Campagna_Social.doc";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
                 
-                filesProcessed++;
-                if (filesProcessed === files.length) {
-                    finalizeUpload();
+                button.innerHTML = '<span>✅</span><span>Scaricato!</span>';
+                button.classList.remove('loading');
+                button.classList.add('success');
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('success');
+                }, 2000);
+            }, 1200);
+        });
+
+        document.getElementById("download-html-btn").addEventListener("click", function() {
+            const button = this;
+            const originalContent = button.innerHTML;
+            if (!campaignData) { alert("Per favore carica prima un file Excel"); return; }
+            button.innerHTML = '<span class="loading-spinner"></span><span>Generando...</span>';
+            button.classList.add('loading');
+            
+            setTimeout(() => {
+                const htmlReport = generateHTMLReport();
+                const blob = new Blob([htmlReport], {type: "text/html"});
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `Report_${campaignLabel.replace(/\s+/g, '_')}.html`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                button.innerHTML = '<span>✅</span><span>Scaricato!</span>';
+                button.classList.remove('loading');
+                button.classList.add('success');
+                setTimeout(() => { button.innerHTML = originalContent; button.classList.remove('success'); }, 2000);
+            }, 1500);
+        });
+
+        document.getElementById('exportAllBtn').addEventListener('click', function() {
+            const button = this;
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<span class="loading-spinner"></span><span>Esportazione...</span>';
+            button.classList.add('loading');
+            setTimeout(() => {
+                const charts = document.querySelectorAll('.chart');
+                charts.forEach((chart, index) => {
+                    const svgContent = chart.innerHTML;
+                    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `grafico_${index + 1}.svg`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+                button.innerHTML = '<span>✅</span><span>Fatto!</span>';
+                button.classList.remove('loading');
+                button.classList.add('success');
+                setTimeout(() => { button.innerHTML = originalContent; button.classList.remove('success'); }, 3000);
+            }, 1500);
+        });
+
+        document.getElementById('toggleLogosBtn').addEventListener('click', function() {
+            isColorLogoMode = !isColorLogoMode;
+            const btn = document.getElementById('toggleLogosBtn');
+            const label = isColorLogoMode ? "Loghi Monocromo" : "Loghi Colorati";
+            btn.innerHTML = `<span><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-3.58-8-8-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9s1.5.67 1.5 1.5S7.33 12 6.5 12zm3 3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></span><span>${label}</span>`;
+            if (campaignData) {
+                generateChartsVisual();
+                // Nota: i grafici per argomenti non usano loghi, quindi non serve rigenerarli
+            }
+        });
+
+        document.getElementById('exportMetricsBtn').addEventListener('click', function() {
+            const button = this;
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<span class="loading-spinner"></span><span>Esportando...</span>';
+            button.classList.add('loading');
+            setTimeout(() => {
+                if (window.metricsSVG) {
+                    const blob = new Blob([window.metricsSVG], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'metriche_generali.svg';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    button.innerHTML = '<span>✅</span><span>Esportato!</span>';
+                    button.classList.remove('loading');
+                    button.classList.add('success');
                 }
+                setTimeout(() => { button.innerHTML = originalContent; button.classList.remove('success'); }, 2000);
+            }, 1000);
+        });
+        
+        document.getElementById('exportMetricsPngBtn').addEventListener('click', function() {
+            const button = this;
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<span class="loading-spinner"></span><span>Generando...</span>';
+            button.classList.add('loading');
+            setTimeout(() => {
+                if (window.metricsSVG) exportMetricsPNG(button, originalContent);
+                else {
+                    button.innerHTML = '<span>⚠️</span><span>Errore</span>';
+                    button.classList.remove('loading');
+                    setTimeout(() => { button.innerHTML = originalContent; }, 2000);
+                }
+            }, 1000);
+        });
+
+        function exportMetricsPNG(button, originalContent) {
+            let svgString = window.metricsSVG;
+            const shadowFilter = `<filter id="drop-shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.1"/></filter>`;
+            if (!svgString.includes(shadowFilter)) svgString = svgString.replace('</defs>', shadowFilter + '</defs>');
+            if (!svgString.includes('filter="url(#drop-shadow)"')) svgString = svgString.replace('<g id="metric-cards-group">', '<g id="metric-cards-group" filter="url(#drop-shadow)">');
+
+            const image = new Image();
+            const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(svgBlob);
+
+            image.onload = () => {
+                const canvas = document.createElement('canvas');
+                const svgWidth = parseInt(svgString.match(/width="(\d+)"/)[1]);
+                const svgHeight = parseInt(svgString.match(/height="(\d+)"/)[1]);
+                canvas.width = svgWidth;
+                canvas.height = svgHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(image, 0, 0);
+                const pngUrl = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = pngUrl;
+                a.download = 'metriche_generali.png';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+                button.innerHTML = '<span>✅</span><span>Esportato!</span>';
+                button.classList.add('success');
+                setTimeout(() => { button.innerHTML = originalContent; button.classList.remove('success'); }, 2000);
             };
-            reader.readAsArrayBuffer(file);
-        });
-    });
-
-    function checkColumns(data) {
-        if (!data || data.length === 0) return false;
-        return data.some(row => row['Comment Message'] && row['Sentiment']);
-    }
-
-    function processData(data, filename) {
-        data.forEach(row => {
-            const msg = row['Comment Message'];
-            const sent = row['Sentiment'];
-
-            if (msg && sent) {
-                const d = parseDate(row['Created Time']);
-                const platform = getPlatformFromLink(row['Comment Link']);
-                
-                const comment = {
-                    message: String(msg),
-                    sentiment: String(sent),
-                    dateObj: d,
-                    author: row['Comment User Name'] || 'Utente',
-                    link: row['Comment Link'] || '',
-                    platform: platform,
-                    sourceFile: filename
-                };
-
-                allComments.push(comment);
-            }
-        });
-    }
-
-    function finalizeUpload() {
-        if (allComments.length > 0) {
-            updateUI();
-            uploadLabel.innerText = "Fatto!";
-            fileCountDisplay.innerText = `Analisi completata: ${allComments.length} commenti trovati.`;
-        } else {
-            errorMsg.innerText = "Errore: Nessun commento valido trovato.";
-            errorMsg.style.display = 'block';
-            uploadLabel.innerText = "Riprova";
+            image.onerror = () => {
+                 button.innerHTML = '<span>⚠️</span><span>Errore</span>';
+                 button.classList.remove('loading');
+                 setTimeout(() => { button.innerHTML = originalContent; }, 2000);
+            };
+            image.src = url;
         }
-        setTimeout(() => { 
-            if(uploadLabel.innerText === "Fatto!") uploadLabel.innerText = "Seleziona File"; 
-        }, 2000);
-    }
-
-    // --- MAIN UI LOGIC ---
-    function updateUI() {
-        appContent.classList.remove('hidden');
-        applyFilters(); 
-    }
-
-    // Reset Logic
-    resetFiltersBtn.addEventListener('click', () => {
-        filterSentiment.value = 'all';
-        filterPlatform.value = 'all';
-        sortOrder.value = 'dateDesc';
-        dateStart.value = '';
-        dateEnd.value = '';
-        applyFilters();
-    });
-
-    // Event Listeners sui filtri
-    [filterSentiment, filterPlatform, sortOrder, dateStart, dateEnd].forEach(el => {
-        el.addEventListener('change', applyFilters);
-    });
-
-    function applyFilters() {
-        // 1. Filtra l'array originale
-        displayedComments = allComments.filter(c => {
-            // Sentiment
-            const s = c.sentiment.toLowerCase();
-            const fSent = filterSentiment.value;
-            if (fSent === 'positive' && !s.includes('positive')) return false;
-            if (fSent === 'negative' && !s.includes('negative')) return false;
-            if (fSent === 'neutral' && !s.includes('neutral')) return false;
-
-            // Platform
-            if (filterPlatform.value !== 'all' && c.platform !== filterPlatform.value) return false;
-
-            // Date Range
-            if (dateStart.value) {
-                const start = new Date(dateStart.value);
-                if (c.dateObj < start) return false;
-            }
-            if (dateEnd.value) {
-                const end = new Date(dateEnd.value);
-                end.setHours(23,59,59);
-                if (c.dateObj > end) return false;
-            }
-
-            return true;
-        });
-
-        // 2. Ordinamento
-        const order = sortOrder.value;
-        displayedComments.sort((a, b) => {
-            if (order === 'dateDesc') return b.dateObj - a.dateObj;
-            if (order === 'dateAsc') return a.dateObj - b.dateObj;
-            if (order === 'lenDesc') return b.message.length - a.message.length;
-            if (order === 'lenAsc') return a.message.length - b.message.length;
-            return 0;
-        });
-
-        // 3. Aggiorna Vista
-        totalCommentsSpan.innerText = displayedComments.length;
-        renderCommentsList();
-        renderChart(); 
-    }
-
-    function renderCommentsList() {
-        commentsList.innerHTML = '';
-        displayedComments.forEach((comment, index) => {
-            const div = document.createElement('div');
-            div.className = 'comment-item';
-            
-            let badgeClass = 'sentiment-neutral';
-            const s = comment.sentiment.toLowerCase();
-            if (s.includes('positive')) badgeClass = 'sentiment-positive';
-            if (s.includes('negative')) badgeClass = 'sentiment-negative';
-
-            const iconPath = getPlatformIconPath(comment.platform);
-            
-            div.innerHTML = `
-                <div class="comment-content">
-                    <div class="comment-meta">
-                        <span class="sentiment-badge ${badgeClass}">${comment.sentiment}</span>
-                        <span>
-                            <svg class="platform-icon-small" viewBox="0 0 24 24"><path d="${iconPath}"/></svg>
-                            ${formatDate(comment.dateObj).split(',')[0]}
-                        </span>
-                    </div>
-                    <p>${comment.message.substring(0, 150)}${comment.message.length > 150 ? '...' : ''}</p>
-                </div>
-                <button class="btn btn-editor" onclick="openEditor(${index})">Editor</button>
-            `;
-            commentsList.appendChild(div);
-        });
-    }
-
-    function renderChart() {
-        const ctx = document.getElementById('sentimentChart').getContext('2d');
-        if (myChart) myChart.destroy();
-
-        let counts = { Positive: 0, Neutral: 0, Negative: 0 };
-        displayedComments.forEach(c => {
-            const s = c.sentiment.toLowerCase();
-            if (s.includes('positive')) counts.Positive++;
-            else if (s.includes('negative')) counts.Negative++;
-            else counts.Neutral++;
-        });
-
-        const total = counts.Positive + counts.Neutral + counts.Negative;
-        
-        const pPos = total ? Math.round((counts.Positive / total) * 100) : 0;
-        const pNeu = total ? Math.round((counts.Neutral / total) * 100) : 0;
-        const pNeg = total ? Math.round((counts.Negative / total) * 100) : 0;
-
-        const cPos = '#28a745';
-        const cNeu = '#ffc107';
-        const cNeg = '#dc3545';
-
-        myChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Positivo', 'Neutro', 'Negativo'],
-                datasets: [{
-                    data: [counts.Positive, counts.Neutral, counts.Negative],
-                    backgroundColor: [cPos, cNeu, cNeg],
-                    borderWidth: 0,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { enabled: true }
-                },
-                cutout: '70%'
-            }
-        });
-
-        customLegend.innerHTML = `
-            <div class="legend-item">
-                <span class="legend-label"><span class="legend-color" style="background:${cPos}"></span>Positivo</span>
-                <span class="legend-percent">${pPos}%</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-label"><span class="legend-color" style="background:${cNeu}"></span>Neutro</span>
-                <span class="legend-percent">${pNeu}%</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-label"><span class="legend-color" style="background:${cNeg}"></span>Negativo</span>
-                <span class="legend-percent">${pNeg}%</span>
-            </div>
-        `;
-    }
-
-    // --- EDITOR MODAL ---
-    function openEditor(index) {
-        const comment = displayedComments[index];
-        
-        cardText.innerText = comment.message;
-        cardDate.innerText = formatDate(comment.dateObj);
-        cardAuthor.innerText = comment.author;
-        
-        const path = getPlatformIconPath(comment.platform);
-        const pathElem = cardIcon.querySelector('path');
-        pathElem.setAttribute('d', path);
-        
-        if (comment.platform === 'facebook') pathElem.style.fill = '#1877F2';
-        else if (comment.platform === 'instagram') pathElem.style.fill = '#E4405F';
-        else if (comment.platform === 'twitter') pathElem.style.fill = '#000000';
-        else pathElem.style.fill = '#0146bc';
-
-        toggleAuthor.checked = true;
-        cardAuthor.style.display = 'block';
-
-        modal.style.display = 'flex';
-    }
-
-    closeModal.onclick = () => { modal.style.display = 'none'; }
-    window.onclick = (event) => { if (event.target == modal) modal.style.display = 'none'; }
-
-    toggleAuthor.addEventListener('change', (e) => {
-        cardAuthor.style.display = e.target.checked ? 'block' : 'none';
-    });
-
-    downloadBtn.addEventListener('click', () => {
-        downloadBtn.innerText = "Generazione...";
-        html2canvas(captureArea, { scale: 2 }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `social-card-${Date.now()}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-            downloadBtn.innerText = "Fatto!";
-            setTimeout(() => downloadBtn.innerText = "Scarica Card", 1500);
-        });
-    });
-
-</script>
-
+    </script>
 </body>
 </html>
