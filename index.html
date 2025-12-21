@@ -916,9 +916,9 @@
 
         function generateHtmlReport(data) {
             const postsByPlatform = {}, viewsByPlatform = {}, interactionsByPlatform = {},
-                  reactionsByPlatform = {}, clicksByPlatform = {},
+                  reactionsByPlatform = {}, clicksByPlatform = {}, commentsByPlatform = {},
                   linksByPlatform = {};
-            let totalViews = 0, totalInteractions = 0, totalReactions = 0, totalClicks = 0;
+            let totalViews = 0, totalInteractions = 0, totalReactions = 0, totalClicks = 0, totalComments = 0;
             let missingInstagramStories = 0;
             let whatsappPosts = 0;
 
@@ -936,6 +936,9 @@
                 const interactions = parseFloat(row["Total interactions"]) || parseFloat(row["Taps forward"]) || 0;
                 const reactions = parseFloat(row["Total reactions"]) || 0;
                 const clicks = parseFloat(row["Post clicks"]) || 0;
+                // Gestione Commenti (prova diverse intestazioni comuni)
+                const comments = parseFloat(row["Comments"]) || parseFloat(row["Total comments"]) || parseFloat(row["Replies"]) || 0;
+                
                 const link = row["View on platform"]?.toString().trim();
                 const labels = row["Labels"]?.toString() || "";
 
@@ -944,13 +947,14 @@
                 rowTopics.forEach(topic => {
                     const cleanTopic = topic;
                     if (!topicsData[cleanTopic]) {
-                        topicsData[cleanTopic] = { posts: 0, views: 0, interactions: 0, reactions: 0, clicks: 0 };
+                        topicsData[cleanTopic] = { posts: 0, views: 0, interactions: 0, reactions: 0, clicks: 0, comments: 0 };
                     }
                     topicsData[cleanTopic].posts++;
                     topicsData[cleanTopic].views += views;
                     topicsData[cleanTopic].interactions += interactions;
                     topicsData[cleanTopic].reactions += reactions;
                     topicsData[cleanTopic].clicks += clicks;
+                    topicsData[cleanTopic].comments += comments;
                 });
                 // -----------------------------
 
@@ -958,6 +962,7 @@
                 interactionsByPlatform[platform] = (interactionsByPlatform[platform] || 0) + interactions;
                 reactionsByPlatform[platform] = (reactionsByPlatform[platform] || 0) + reactions;
                 clicksByPlatform[platform] = (clicksByPlatform[platform] || 0) + clicks;
+                commentsByPlatform[platform] = (commentsByPlatform[platform] || 0) + comments;
 
                 if (link) {
                     if (!linksByPlatform[capitalizedPlatform]) linksByPlatform[capitalizedPlatform] = [];
@@ -975,6 +980,7 @@
                 totalInteractions += interactions;
                 totalReactions += reactions;
                 totalClicks += clicks;
+                totalComments += comments;
             });
 
             const totalPosts = data.length + whatsappPosts;
@@ -991,6 +997,7 @@
                 generateList("Visualizzazioni", viewsByPlatform) +
                 generateList("Interazioni", interactionsByPlatform) +
                 generateList("Like e reazioni", reactionsByPlatform) +
+                generateList("Commenti", commentsByPlatform) +
                 generateList("Click", clicksByPlatform) +
                 generateLinkSection(linksByPlatform, missingInstagramStories, whatsappPosts);
 
@@ -1004,6 +1011,7 @@
                 totalInteractions,
                 totalReactions,
                 totalClicks,
+                totalComments,
                 platforms: {}
             };
 
@@ -1015,7 +1023,8 @@
                     views: viewsByPlatform[platform] || 0,
                     interactions: interactionsByPlatform[platform] || 0,
                     reactions: reactionsByPlatform[platform] || 0,
-                    clicks: clicksByPlatform[platform] || 0
+                    clicks: clicksByPlatform[platform] || 0,
+                    comments: commentsByPlatform[platform] || 0
                 };
             });
             
@@ -1025,7 +1034,8 @@
                     views: 0,
                     interactions: 0,
                     reactions: 0,
-                    clicks: 0
+                    clicks: 0,
+                    comments: 0
                 };
             }
         }
@@ -1041,10 +1051,11 @@
         function generateMetrics() {
             const metricsGrid = document.getElementById('metricsGrid');
             const metrics = [
-                { label: 'Post Totali', value: formatNumberForCharts(campaignData.totalPosts) }, // APPLICATA FORMATTAZIONE ANCHE QUI
+                { label: 'Post Totali', value: formatNumberForCharts(campaignData.totalPosts) }, 
                 { label: 'Visualizzazioni', value: formatNumberForCharts(campaignData.totalViews) },
                 { label: 'Interazioni', value: formatNumberForCharts(campaignData.totalInteractions) },
-                { label: 'Like e Reazioni', value: formatNumberForCharts(campaignData.totalReactions) }
+                { label: 'Like e Reazioni', value: formatNumberForCharts(campaignData.totalReactions) },
+                { label: 'Commenti', value: formatNumberForCharts(campaignData.totalComments) }
             ];
 
             const metricsHtml = metrics.map(metric => `
@@ -1061,11 +1072,11 @@
         }
 
         function createMetricsSVG(metrics) {
-            const svgWidth = 800;
+            const svgWidth = 900; // Increased width for extra card
             const svgHeight = 250; 
-            const cardWidth = 180;
+            const cardWidth = 160; // Slightly smaller to fit
             const cardHeight = 120;
-            const spacing = 20;
+            const spacing = 15;
             const startX = (svgWidth - (metrics.length * cardWidth + (metrics.length - 1) * spacing)) / 2;
             const startY = 45;
             
@@ -1099,12 +1110,12 @@
                 
                 // Value text
                 svg += `<text x="${x + cardWidth/2}" y="${y + 50}" text-anchor="middle" 
-                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="32" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="28" 
                         fill="${valueColor}" font-weight="bold">${metric.value}</text>`;
                 
                 // Label text
                 svg += `<text x="${x + cardWidth/2}" y="${y + 80}" text-anchor="middle" 
-                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="14" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="12" 
                         fill="${labelColor}" opacity="0.9">${metric.label}</text>`;
             });
             
@@ -1118,38 +1129,29 @@
             const container = document.getElementById('chartsContainer');
             container.innerHTML = '';
 
-            // Posts by platform chart
-            const postsData = Object.entries(campaignData.platforms)
-                .map(([name, data]) => ({ name: capitalize(name), value: data.posts }))
+            // Helper to prepare data
+            const prepareData = (key) => Object.entries(campaignData.platforms)
+                .map(([name, data]) => ({ name: capitalize(name), value: data[key] }))
                 .filter(d => d.value > 0) 
                 .sort((a, b) => b.value - a.value);
+
+            const postsData = prepareData('posts');
+            const viewsData = prepareData('views');
+            const interactionsData = prepareData('interactions');
+            const reactionsData = prepareData('reactions');
+            const commentsData = prepareData('comments');
+
             const postsChart = createBarChart('Post Pubblicati', postsData, true);
-
-            // Views by platform chart
-            const viewsData = Object.entries(campaignData.platforms)
-                .map(([name, data]) => ({ name: capitalize(name), value: data.views }))
-                .filter(d => d.value > 0) 
-                .sort((a, b) => b.value - a.value);
             const viewsChart = createBarChart('Visualizzazioni', viewsData);
-
-            // Interactions by platform chart
-            const interactionsData = Object.entries(campaignData.platforms)
-                .map(([name, data]) => ({ name: capitalize(name), value: data.interactions }))
-                .filter(d => d.value > 0) 
-                .sort((a, b) => b.value - a.value);
             const interactionsChart = createBarChart('Interazioni', interactionsData);
-
-            // Like e reazioni chart
-            const reactionsData = Object.entries(campaignData.platforms)
-                .map(([name, data]) => ({ name: capitalize(name), value: data.reactions }))
-                .filter(d => d.value > 0) 
-                .sort((a, b) => b.value - a.value);
             const reactionsChart = createBarChart('Like e Reazioni', reactionsData);
+            const commentsChart = createBarChart('Commenti', commentsData);
 
             container.appendChild(createChartWrapper('Post Pubblicati', postsChart));
             container.appendChild(createChartWrapper('Visualizzazioni', viewsChart));
             container.appendChild(createChartWrapper('Interazioni', interactionsChart));
             container.appendChild(createChartWrapper('Like e Reazioni', reactionsChart));
+            container.appendChild(createChartWrapper('Commenti', commentsChart));
         }
 
         // --- TOPIC CHARTS GENERATION ---
@@ -1178,17 +1180,20 @@
             const viewsData = prepareTopicData('views');
             const interactionsData = prepareTopicData('interactions');
             const reactionsData = prepareTopicData('reactions');
+            const commentsData = prepareTopicData('comments');
 
             // Use Horizontal Chart function for topics, wrapped in full-width container
             const postsChart = createHorizontalBarChart('Post per Argomento', postsData, true);
             const viewsChart = createHorizontalBarChart('Visualizzazioni per Argomento', viewsData);
             const interactionsChart = createHorizontalBarChart('Interazioni per Argomento', interactionsData);
             const reactionsChart = createHorizontalBarChart('Like/Reazioni per Argomento', reactionsData);
+            const commentsChart = createHorizontalBarChart('Commenti per Argomento', commentsData);
 
             container.appendChild(createChartWrapper('Post per Argomento', postsChart, true));
             container.appendChild(createChartWrapper('Visualizzazioni per Argomento', viewsChart, true));
             container.appendChild(createChartWrapper('Interazioni per Argomento', interactionsChart, true));
             container.appendChild(createChartWrapper('Like/Reazioni per Argomento', reactionsChart, true));
+            container.appendChild(createChartWrapper('Commenti per Argomento', commentsChart, true));
         }
 
         // --- CHART CREATION FUNCTIONS ---
@@ -1290,6 +1295,7 @@
                 
                 // Add Logo
                 const logoName = item.name.toLowerCase();
+                // SELEZIONE LOGHI: Controlla la flag globale
                 const logoSet = isColorLogoMode ? socialLogosColor : socialLogos;
                 const logo = logoSet[logoName] || logoSet['sconosciuto'];
                 
