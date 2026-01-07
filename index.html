@@ -276,7 +276,7 @@
         }
         
         .metric-label {
-            font-size: 0.85rem;
+            /* Dimensione controllata via JS ora */
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -365,12 +365,12 @@
 
         /* Specific override for "Download/Export" to match UI Kit Yellow if desired, 
            or keep clean. Let's use the UI Kit "Export" style (Yellow) for specific actions */
-        #download-btn, #exportAllBtn, #exportMetricsBtn, #exportMetricsPngBtn {
+        #download-btn, #exportAllBtn, #exportMetricsBtn, #exportMetricsPngBtn, #confirmExportHtmlBtn {
             background-color: var(--accent-warning);
             color: #333;
         }
         
-        #download-btn:hover, #exportAllBtn:hover, #exportMetricsBtn:hover, #exportMetricsPngBtn:hover {
+        #download-btn:hover, #exportAllBtn:hover, #exportMetricsBtn:hover, #exportMetricsPngBtn:hover, #confirmExportHtmlBtn:hover {
             background-color: var(--accent-warning-hover);
         }
         
@@ -413,6 +413,11 @@
             font-weight: 600;
             color: var(--text-secondary);
             font-size: 0.9rem;
+        }
+        
+        /* Slider style */
+        input[type=range] {
+            cursor: pointer;
         }
 
         /* --- Modal --- */
@@ -472,6 +477,41 @@
             border-color: var(--primary);
             outline: none;
             box-shadow: 0 0 0 2px rgba(0, 82, 159, 0.2);
+        }
+        
+        /* Export Options List */
+        .export-options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .export-option-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        
+        .export-option-item:hover {
+            background: #f8fafc;
+        }
+        
+        .export-option-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .export-option-item label {
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-main);
+            flex: 1;
         }
 
         /* Animations */
@@ -602,7 +642,13 @@
                         <div class="section-title-content">
                             KPI Generali
                         </div>
-                        <div class="export-section" style="border:none; padding:0; margin:0;">
+                        <div class="export-section" style="border:none; padding:0; margin:0; display:flex; align-items:center; gap:20px;">
+                             <div class="control-group" style="background:#f8fafc; padding:5px 10px; border-radius:4px; border:1px solid var(--border);">
+                                <label for="kpiFontSizeControl" style="font-size:0.85rem;">Dim. Etichette:</label>
+                                <input type="range" id="kpiFontSizeControl" min="10" max="24" value="13" oninput="updateKpiSettings()">
+                                <span id="kpiFontSizeDisplay" style="font-size:0.85rem; min-width:35px;">13px</span>
+                             </div>
+
                              <button class="secondary-btn" onclick="toggleLightMode()" id="lightModeBtn">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                                     <path d="M12,18V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,15.31L23.31,12L20,8.69V15.31M4,15.31V8.69L0.69,12L4,15.31M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
@@ -707,6 +753,34 @@
         </div>
     </div>
 
+    <div id="exportModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeExportModal()">&times;</span>
+            <h3>Opzioni Esportazione HTML</h3>
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">Seleziona le sezioni da includere nel report scaricato.</p>
+            
+            <div class="export-options-list">
+                <div class="export-option-item">
+                    <input type="checkbox" id="checkMetrics" checked>
+                    <label for="checkMetrics">KPI Generali (Metriche)</label>
+                </div>
+                <div class="export-option-item">
+                    <input type="checkbox" id="checkPlatformCharts" checked>
+                    <label for="checkPlatformCharts">Grafici per Piattaforma</label>
+                </div>
+                <div class="export-option-item">
+                    <input type="checkbox" id="checkTopicCharts" checked>
+                    <label for="checkTopicCharts">Analisi per Argomenti</label>
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-top: 25px; border-top: 1px solid var(--border); padding-top: 15px;">
+                <button class="secondary-btn" onclick="closeExportModal()" style="margin-right: 10px;">Annulla</button>
+                <button id="confirmExportHtmlBtn" onclick="confirmExportHtml()">Scarica Report</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let latestHtml = "";
         let campaignData = null;
@@ -715,6 +789,7 @@
         let campaignLabel = "";
         let isLightMode = false;
         let isColorLogoMode = false;
+        let currentKpiLabelSize = 13; // Default size for KPI labels
         
         // Impostazioni globali per i grafici degli argomenti
         let topicChartSettings = {
@@ -738,6 +813,18 @@
             
             if (topicsData) {
                 generateTopicCharts();
+            }
+        }
+
+        // --- NEW FUNCTION: KPI Settings Update ---
+        function updateKpiSettings() {
+            const size = document.getElementById('kpiFontSizeControl').value;
+            currentKpiLabelSize = parseInt(size);
+            document.getElementById('kpiFontSizeDisplay').innerText = size + 'px';
+            
+            // Regenerate metrics if data exists
+            if (campaignData) {
+                generateMetrics();
             }
         }
 
@@ -1058,10 +1145,11 @@
                 { label: 'Commenti', value: formatNumberForCharts(campaignData.totalComments) }
             ];
 
+            // UPDATE: Apply currentKpiLabelSize
             const metricsHtml = metrics.map(metric => `
                 <div class="metric-card${isLightMode ? ' light-mode' : ''}">
                     <div class="metric-value">${metric.value}</div>
-                    <div class="metric-label">${metric.label}</div>
+                    <div class="metric-label" style="font-size: ${currentKpiLabelSize}px">${metric.label}</div>
                 </div>
             `).join('');
             
@@ -1114,8 +1202,9 @@
                         fill="${valueColor}" font-weight="bold">${metric.value}</text>`;
                 
                 // Label text
+                // UPDATE: Use currentKpiLabelSize
                 svg += `<text x="${x + cardWidth/2}" y="${y + 80}" text-anchor="middle" 
-                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="12" 
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="${currentKpiLabelSize}" 
                         fill="${labelColor}" opacity="0.9">${metric.label}</text>`;
             });
             
@@ -1485,16 +1574,58 @@
             generateTopicCharts(); // Regenerate charts with new names
         }
 
+        // --- NEW MODAL FUNCTIONS FOR HTML EXPORT ---
+
+        function openExportModal() {
+            if (!campaignData) { 
+                alert("Per favore carica prima un file Excel"); 
+                return; 
+            }
+            document.getElementById('exportModal').style.display = 'block';
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').style.display = 'none';
+        }
+
+        function confirmExportHtml() {
+            const includeMetrics = document.getElementById('checkMetrics').checked;
+            const includePlatform = document.getElementById('checkPlatformCharts').checked;
+            const includeTopics = document.getElementById('checkTopicCharts').checked;
+            
+            const btn = document.getElementById('confirmExportHtmlBtn');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = 'Generazione in corso...';
+            
+            setTimeout(() => {
+                const htmlReport = generateHTMLReport(includeMetrics, includePlatform, includeTopics);
+                const blob = new Blob([htmlReport], {type: "text/html"});
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `Report_${campaignLabel.replace(/\s+/g, '_')}.html`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                btn.innerHTML = originalContent;
+                closeExportModal();
+            }, 800);
+        }
+
         // Close modal if clicking outside
         window.onclick = function(event) {
-            const modal = document.getElementById('topicModal');
-            if (event.target == modal) {
+            const tModal = document.getElementById('topicModal');
+            const eModal = document.getElementById('exportModal');
+            if (event.target == tModal) {
                 closeTopicEditor();
+            }
+            if (event.target == eModal) {
+                closeExportModal();
             }
         }
 
-        // Generate HTML report with charts
-        function generateHTMLReport() {
+        // Generate HTML report with charts - UPDATED TO SUPPORT SELECTION
+        function generateHTMLReport(includeMetrics = true, includePlatform = true, includeTopics = true) {
             const title = `Risultati social`;
             const subtitle = campaignLabel;
             
@@ -1515,14 +1646,26 @@
 <body>
     <div class="container">
         <h1>${title}</h1>
-        <h2>${subtitle}</h2>
-        <div class="chart-container">${window.metricsSVG}</div>`;
+        <h2>${subtitle}</h2>`;
 
-            // Add all charts from both containers
-            const charts = document.querySelectorAll('.chart');
-            charts.forEach((chart, index) => {
-                htmlContent += `<div class="chart-container">${chart.innerHTML}</div>`;
-            });
+            if (includeMetrics && window.metricsSVG) {
+                htmlContent += `<div class="chart-container">${window.metricsSVG}</div>`;
+            }
+
+            // Add selected charts
+            if (includePlatform) {
+                const charts = document.querySelectorAll('#chartsContainer .chart');
+                charts.forEach((chart) => {
+                    htmlContent += `<div class="chart-container">${chart.innerHTML}</div>`;
+                });
+            }
+
+            if (includeTopics) {
+                 const charts = document.querySelectorAll('#topicsChartsContainer .chart');
+                charts.forEach((chart) => {
+                    htmlContent += `<div class="chart-container">${chart.innerHTML}</div>`;
+                });
+            }
 
             htmlContent += `</div></body></html>`;
             return htmlContent;
@@ -1606,27 +1749,9 @@
             }, 1200);
         });
 
+        // UPDATE: Changed to open Modal
         document.getElementById("download-html-btn").addEventListener("click", function() {
-            const button = this;
-            const originalContent = button.innerHTML;
-            if (!campaignData) { alert("Per favore carica prima un file Excel"); return; }
-            button.innerHTML = '<span class="loading-spinner"></span><span>Generando...</span>';
-            button.classList.add('loading');
-            
-            setTimeout(() => {
-                const htmlReport = generateHTMLReport();
-                const blob = new Blob([htmlReport], {type: "text/html"});
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = `Report_${campaignLabel.replace(/\s+/g, '_')}.html`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                button.innerHTML = '<span>✅</span><span>Scaricato!</span>';
-                button.classList.remove('loading');
-                button.classList.add('success');
-                setTimeout(() => { button.innerHTML = originalContent; button.classList.remove('success'); }, 2000);
-            }, 1500);
+           openExportModal();
         });
 
         document.getElementById('exportAllBtn').addEventListener('click', function() {
