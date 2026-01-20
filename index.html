@@ -1071,11 +1071,36 @@
             });
 
             const totalPosts = data.length + whatsappPosts;
-            const label = cleanLabel(data.find(row => row["Labels"])?.["Labels"] || "");
-            campaignLabel = label; // Store for later use
+            
+            // Logica Titolo: Argomento Singolo vs Multi-Topic (Periodo)
+            const uniqueTopics = Object.keys(topicsData);
+            // Fix Date Parsing: gestisce sia stringhe che seriali numerici Excel
+            const rawDates = data.map(r => {
+                const d = r["Date"];
+                if (!d) return null;
+                // Se è un numero (formato seriale Excel), converte in data JS
+                if (typeof d === 'number') return new Date(Math.round((d - 25569) * 86400 * 1000));
+                return new Date(d);
+            }).filter(d => d && !isNaN(d.getTime()));
+            
+            let introText = "";
+            const mainLabel = cleanLabel(data.find(row => row["Labels"])?.["Labels"] || "");
+            
+            if (uniqueTopics.length > 1 && rawDates.length > 0) {
+                const minDate = new Date(Math.min.apply(null, rawDates));
+                const maxDate = new Date(Math.max.apply(null, rawDates));
+                const dateOpts = { day: '2-digit', month: 'long', year: 'numeric' };
+                const dateRange = `${minDate.toLocaleDateString('it-IT', dateOpts)} - ${maxDate.toLocaleDateString('it-IT', dateOpts)}`;
+                
+                campaignLabel = `Attività ${dateRange}`;
+                introText = `Risultati dell'attività social del periodo ${dateRange}`;
+            } else {
+                campaignLabel = mainLabel;
+                introText = `Risultati della campagna social dedicata all'argomento "${mainLabel}"`;
+            }
 
             const html =
-                `Risultati della campagna social dedicata all'argomento "${label}"<br>` +
+                `${introText}<br>` +
                 `<strong>Complessivamente sono stati pubblicati ${totalPosts} post</strong>, ` +
                 `che hanno ottenuto <strong>${formatNumber(totalViews)}</strong> visualizzazioni ` +
                 `e <strong>${formatNumber(totalInteractions)}</strong> interazioni.<br>` +
