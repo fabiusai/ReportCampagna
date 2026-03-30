@@ -904,7 +904,7 @@
         }
 
         function cleanLabel(label) {
-            const tags = ["#PES", "#TER", "#ISR", "#FIL", "#EB", "#NED", "#CET", "#DEI", "#IST", "#WHA", "#ST", "#RIC"];
+            const tags = ["#PES", "#TER", "#ISR", "#FIL", "#MICO", "#EB", "#NED", "#CET", "#DEI", "#IST", "#WHA", "#ST", "#RIC"];
             tags.forEach(tag => {
                 label = label.replace(tag, "");
             });
@@ -913,7 +913,7 @@
 
         // NUOVA FUNZIONE PER ESTRARRE ARGOMENTI MULTIPLI
         function parseTopics(label) {
-            const tags = ["#PES", "#TER", "#ISR", "#FIL", "#EB", "#NED", "#CET", "#DEI", "#IST", "#WHA", "#ST", "#RIC"];
+            const tags = ["#PES", "#TER", "#ISR", "#FIL", "#EB", "#MICO", "#NED", "#CET", "#DEI", "#IST", "#WHA", "#ST", "#RIC"];
             let cleanL = label;
             tags.forEach(tag => {
                 cleanL = cleanL.split(tag).join(""); // Rimuove tutte le occorrenze
