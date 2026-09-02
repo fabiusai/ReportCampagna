@@ -922,7 +922,7 @@
             return cleanL.split(';')
                 .map(s => s.trim())
                 .filter(s => s.length > 0 && s !== "nan");
-    }
+        }
 
         function generateList(title, obj) {
             const entries = Object.entries(obj)
@@ -1007,30 +1007,40 @@
                   linksByPlatform = {};
             let totalViews = 0, totalInteractions = 0, totalReactions = 0, totalClicks = 0, totalComments = 0;
             let missingInstagramStories = 0;
-            let whatsappPosts = 0;
+            let extraWhatsappPostsFromLabels = 0;
+            let directWhatsappRows = 0;
 
             // Reset topics data
             topicsData = {};
             topicRenames = {}; // Reset renames on new file load
 
             data.forEach(row => {
-                let platform = row["Platform"]?.toString().trim().toLowerCase() || "Sconosciuto";
+                // MAPPATURA PIATTAFORMA
+                let platform = (row["Platform"] || row["Canale"])?.toString().trim().toLowerCase() || "Sconosciuto";
                 if (platform === "twitter") platform = "x";
                 const capitalizedPlatform = platform.charAt(0).toUpperCase() + platform.slice(1);
 
                 postsByPlatform[platform] = (postsByPlatform[platform] || 0) + 1;
-                const views = parseFloat(row["Total impressions"]) || parseFloat(row["Video view count"]) || 0;
-                const interactions = parseFloat(row["Total interactions"]) || parseFloat(row["Taps forward"]) || 0;
-                const reactions = parseFloat(row["Total reactions"]) || 0;
-                const clicks = parseFloat(row["Post clicks"]) || 0;
-                // Gestione Commenti (prova diverse intestazioni comuni)
-                const comments = parseFloat(row["Comments"]) || parseFloat(row["Total comments"]) || parseFloat(row["Replies"]) || 0;
                 
-                const link = row["View on platform"]?.toString().trim();
-                const labels = row["Labels"]?.toString() || "";
+                // MAPPATURA METRICHE COMPATIBILE CON ENTRAMBI I FORMATI
+                const views = parseFloat(row["Total impressions"] || row["Video view count"] || row["Visualizzazioni"]) || 0;
+                const interactions = parseFloat(row["Total interactions"] || row["Taps forward"] || row["Interazioni"]) || 0;
+                const reactions = parseFloat(row["Total reactions"] || row["Like e reazioni"]) || 0;
+                const clicks = parseFloat(row["Post clicks"] || row["Click"]) || 0;
+                const comments = parseFloat(row["Comments"] || row["Total comments"] || row["Replies"] || row["Commenti"]) || 0;
+                
+                // MAPPATURA LINK
+                let link = (row["View on platform"] || row["Link"])?.toString().trim();
+                // Ignora i finti link testuali del nuovo Excel come "Post Whatsapp"
+                if (link && !link.startsWith("http")) {
+                    link = null;
+                }
+
+                // MAPPATURA ARGOMENTI: "Argomento" per il nuovo file, "Labels" per il vecchio
+                const topicsSource = (row["Argomento"] || row["Labels"])?.toString() || "";
 
                 // --- TOPIC EXTRACTION LOGIC ---
-                const rowTopics = parseTopics(labels);
+                const rowTopics = parseTopics(topicsSource);
                 rowTopics.forEach(topic => {
                     const cleanTopic = topic;
                     if (!topicsData[cleanTopic]) {
@@ -1058,9 +1068,13 @@
                     missingInstagramStories++;
                 }
 
-                if (labels.includes("#WHA")) {
-                    whatsappPosts++;
+                // Gestione WhatsApp (solo la vecchia colonna Labels conteneva il tag testuale)
+                const oldLabelsStr = row["Labels"]?.toString() || "";
+                if (oldLabelsStr.includes("#WHA") && platform !== "whatsapp") {
+                    extraWhatsappPostsFromLabels++;
                     postsByPlatform["whatsapp"] = (postsByPlatform["whatsapp"] || 0) + 1;
+                } else if (platform === "whatsapp") {
+                    directWhatsappRows++;
                 }
 
                 totalViews += views;
@@ -1070,21 +1084,35 @@
                 totalComments += comments;
             });
 
-            const totalPosts = data.length + whatsappPosts;
+            // I post WhatsApp reali ("riga") sono già contati in data.length. 
+            // Aggiungiamo al totale solo quelli inseriti come label aggiuntiva dai vecchi file.
+            const totalPosts = data.length + extraWhatsappPostsFromLabels;
+            const totalWhatsapp = extraWhatsappPostsFromLabels + directWhatsappRows;
             
             // Logica Titolo: Argomento Singolo vs Multi-Topic (Periodo)
             const uniqueTopics = Object.keys(topicsData);
-            // Fix Date Parsing: gestisce sia stringhe che seriali numerici Excel
+            
+            // MAPPATURA E PARSING DATE
             const rawDates = data.map(r => {
-                const d = r["Date"];
+                const d = r["Date"] || r["Data"];
                 if (!d) return null;
-                // Se è un numero (formato seriale Excel), converte in data JS
+                // Formato seriale Excel
                 if (typeof d === 'number') return new Date(Math.round((d - 25569) * 86400 * 1000));
+                
+                // Formato testuale GG/MM/AAAA italiano
+                if (typeof d === 'string' && d.includes('/')) {
+                    const parts = d.split('/');
+                    if(parts.length === 3) {
+                         return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                    }
+                }
                 return new Date(d);
             }).filter(d => d && !isNaN(d.getTime()));
             
             let introText = "";
-            const mainLabel = cleanLabel(data.find(row => row["Labels"])?.["Labels"] || "");
+            // Recupera il primo argomento o label valida per dare il titolo al report testuale
+            const sampleTopicRow = data.find(row => row["Argomento"] || row["Labels"]);
+            const mainLabel = cleanLabel((sampleTopicRow ? (sampleTopicRow["Argomento"] || sampleTopicRow["Labels"]) : "").toString());
             
             if (uniqueTopics.length > 1 && rawDates.length > 0) {
                 const minDate = new Date(Math.min.apply(null, rawDates));
@@ -1111,7 +1139,7 @@
                 generateList("Like e reazioni", reactionsByPlatform) +
                 generateList("Commenti", commentsByPlatform) +
                 generateList("Click", clicksByPlatform) +
-                generateLinkSection(linksByPlatform, missingInstagramStories, whatsappPosts);
+                generateLinkSection(linksByPlatform, missingInstagramStories, totalWhatsapp);
 
             latestHtml = html;
             document.getElementById("report").innerHTML = html;
@@ -1140,9 +1168,9 @@
                 };
             });
             
-            if (whatsappPosts > 0) {
+            if (totalWhatsapp > 0) {
                 campaignData.platforms["whatsapp"] = {
-                    posts: whatsappPosts,
+                    posts: totalWhatsapp,
                     views: 0,
                     interactions: 0,
                     reactions: 0,
