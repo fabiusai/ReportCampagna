@@ -984,22 +984,124 @@
             }
         }
 
+        let globalExcelData = [];
+
+        function parseExcelDate(d) {
+            if (!d) return null;
+            if (typeof d === 'number') return new Date(Math.round((d - 25569) * 86400 * 1000));
+            if (typeof d === 'string' && d.includes('/')) {
+                const parts = d.split('/');
+                if(parts.length === 3) return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            }
+            const parsed = new Date(d);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+        
+        function getLocalISODate(d) {
+            return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        }
+
         function processExcelFile(file) {
+            // Aggiornamento/Aggiunta versione app (v1.1)
+            const subtitle = document.querySelector('.header-subtitle');
+            if (subtitle && !subtitle.innerText.includes('v1.')) {
+                subtitle.innerText = subtitle.innerText + ' - v1.1';
+            }
+
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const data = evt.target.result;
                 const workbook = XLSX.read(data, {type: 'binary'});
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(sheet, {defval: ""});
+                
+                globalExcelData = jsonData;
+
+                // Creazione interfaccia filtro date globale inserita sotto i tab
+                if (!document.getElementById('date-filter-container')) {
+                    const filterHtml = `
+                        <div id="date-filter-container" style="background: var(--surface); padding: 15px; margin: 15px 1.5rem; border-radius: 8px; border: 1px solid var(--border); box-shadow: var(--shadow-card); display: flex; gap: 15px; align-items: center; flex-wrap: wrap; animation: fadeIn 0.4s;">
+                            <strong style="color: var(--primary); display: flex; align-items: center; gap: 5px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M9 11H7V13H9V11ZM13 11H11V13H13V11ZM17 11H15V13H17V11ZM19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                                </svg>
+                                Filtro Periodo:
+                            </strong>
+                            <div style="display:flex; align-items:center; gap: 8px; margin-left: 10px;">
+                                <label for="filter-start-date" style="font-size: 0.9rem; color: var(--text-secondary);">Da:</label>
+                                <input type="date" id="filter-start-date" style="padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; color: var(--text-main);">
+                            </div>
+                            <div style="display:flex; align-items:center; gap: 8px;">
+                                <label for="filter-end-date" style="font-size: 0.9rem; color: var(--text-secondary);">A:</label>
+                                <input type="date" id="filter-end-date" style="padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; color: var(--text-main);">
+                            </div>
+                            <div style="display:flex; align-items:center; gap: 10px; margin-left: auto;">
+                                <button onclick="applyDateFilter()" style="padding: 8px 16px;">Applica Filtro</button>
+                                <button onclick="resetDateFilter()" class="secondary-btn" style="padding: 8px 16px;">Mostra Tutto</button>
+                            </div>
+                        </div>
+                    `;
+                    document.querySelector('.tabs-container').insertAdjacentHTML('afterend', filterHtml);
+                }
+
+                // Inizializzazione degli input data in base ai limiti del dataset attuale
+                const dates = jsonData.map(r => parseExcelDate(r["Date"] || r["Data"])).filter(d => d);
+                if (dates.length > 0) {
+                    const minDate = new Date(Math.min.apply(null, dates));
+                    const maxDate = new Date(Math.max.apply(null, dates));
+                    document.getElementById('filter-start-date').value = getLocalISODate(minDate);
+                    document.getElementById('filter-end-date').value = getLocalISODate(maxDate);
+                }
+
                 generateHtmlReport(jsonData);
                 generateCharts(jsonData);
                 
-                // Enable tabs and switch to Report
+                // Abilitazione tabs e transizione alla vista Report
                 enableTabs();
                 switchTab('tab-report');
             };
             reader.readAsBinaryString(file);
         }
+
+        function applyDateFilter() {
+            const startVal = document.getElementById('filter-start-date').value;
+            const endVal = document.getElementById('filter-end-date').value;
+            
+            if (!startVal || !endVal) return;
+            
+            const startDate = new Date(startVal);
+            const endDate = new Date(endVal);
+            endDate.setHours(23, 59, 59, 999); // Estende a fine giornata l'estremo
+
+            const filteredData = globalExcelData.filter(row => {
+                const d = parseExcelDate(row["Date"] || row["Data"]);
+                if (!d) return false; 
+                return d >= startDate && d <= endDate;
+            });
+
+            generateHtmlReport(filteredData);
+            generateCharts(filteredData);
+        }
+
+        function resetDateFilter() {
+            const dates = globalExcelData.map(r => parseExcelDate(r["Date"] || r["Data"])).filter(d => d);
+            if (dates.length > 0) {
+                const minDate = new Date(Math.min.apply(null, dates));
+                const maxDate = new Date(Math.max.apply(null, dates));
+                document.getElementById('filter-start-date').value = getLocalISODate(minDate);
+                document.getElementById('filter-end-date').value = getLocalISODate(maxDate);
+            }
+            generateHtmlReport(globalExcelData);
+            generateCharts(globalExcelData);
+        }
+
+        // Patch errore di sintassi e aggiornamento versione app (v1.2)
+        document.addEventListener('DOMContentLoaded', () => {
+            const subtitle = document.querySelector('.header-subtitle');
+            if (subtitle) {
+                subtitle.innerHTML = 'Dashboard Analitica - Poste Italiane <span style="opacity: 0.8; font-size: 0.9em; margin-left: 5px;">v1.2</span>';
+            }
+        });
 
         function generateHtmlReport(data) {
             const postsByPlatform = {}, viewsByPlatform = {}, interactionsByPlatform = {},
