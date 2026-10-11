@@ -67,6 +67,20 @@
             font-weight: 400;
         }
 
+        .app-version {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 3px 10px;
+            border-radius: 6px;
+            background: #FFD800;
+            color: #0033A0;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.2;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
         /* --- Tabs Navigation --- */
         .tabs-container {
             background: var(--surface);
@@ -550,7 +564,7 @@
                 </svg>
                 Social Campaign Analyzer
             </h1>
-            <p class="header-subtitle">Dashboard Analitica - Poste Italiane</p>
+            <p class="header-subtitle">Dashboard Analitica - Poste Italiane <span class="app-version">v1.5</span></p>
         </div>
     </header>
 
@@ -1002,12 +1016,6 @@
         }
 
         function processExcelFile(file) {
-            // Aggiornamento/Aggiunta versione app (v1.1)
-            const subtitle = document.querySelector('.header-subtitle');
-            if (subtitle && !subtitle.innerText.includes('v1.')) {
-                subtitle.innerText = subtitle.innerText + ' - v1.1';
-            }
-
             const reader = new FileReader();
             reader.onload = function(evt) {
                 const data = evt.target.result;
@@ -1094,14 +1102,6 @@
             generateHtmlReport(globalExcelData);
             generateCharts(globalExcelData);
         }
-
-        // Patch errore di sintassi e aggiornamento versione app (v1.2)
-        document.addEventListener('DOMContentLoaded', () => {
-            const subtitle = document.querySelector('.header-subtitle');
-            if (subtitle) {
-                subtitle.innerHTML = 'Dashboard Analitica - Poste Italiane <span style="opacity: 0.8; font-size: 0.9em; margin-left: 5px;">v1.2</span>';
-            }
-        });
 
         function generateHtmlReport(data) {
             const postsByPlatform = {}, viewsByPlatform = {}, interactionsByPlatform = {},
@@ -2046,18 +2046,6 @@
 
         // --- PATCH: Aggiunta Tab "Analisi temporale" e logica (v1.3) ---
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Aggiorna Versione App
-            const subtitle = document.querySelector('.header-subtitle');
-            if (subtitle) {
-                if (subtitle.innerHTML.includes('v1.3')) {
-                    subtitle.innerHTML = subtitle.innerHTML.replace('v1.3', 'v1.4');
-                } else if (subtitle.innerHTML.includes('v1.2')) {
-                    subtitle.innerHTML = subtitle.innerHTML.replace('v1.2', 'v1.4');
-                } else if (!subtitle.innerHTML.includes('v1.')) {
-                    subtitle.innerHTML += ' <span style="opacity: 0.8; font-size: 0.9em; margin-left: 5px;">v1.4</span>';
-                }
-            }
-
             // 2. Inserisci Bottone Tab
             const tabsContainer = document.querySelector('.tabs-container');
             if (tabsContainer) {
