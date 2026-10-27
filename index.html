@@ -564,7 +564,7 @@
                 </svg>
                 Social Campaign Analyzer
             </h1>
-            <p class="header-subtitle">Dashboard Analitica <span class="app-version">v1.5</span></p>
+            <p class="header-subtitle">Dashboard Analitica <span class="app-version">v1.6</span></p>
         </div>
     </header>
 
@@ -700,6 +700,29 @@
                             Loghi Monocromo
                         </button>
                     </h2>
+                    <div class="controls-toolbar" id="platformLabelToolbar">
+                        <div class="control-group">
+                            <input type="checkbox" id="platformLabelAuto" checked onchange="updatePlatformLabelSettings()">
+                            <label for="platformLabelAuto" style="cursor:pointer;" title="Riduce automaticamente il testo se i nomi dei canali non entrano nello spazio disponibile">Adatta automaticamente</label>
+                        </div>
+                        <div class="control-group">
+                            <label for="platformLabelSize" id="platformLabelSizeLabel">Dim. max etichette:</label>
+                            <input type="range" id="platformLabelSize" min="10" max="24" value="18" oninput="updatePlatformLabelSettings()">
+                            <span id="platformLabelSizeDisplay" style="min-width:40px;">18px</span>
+                        </div>
+                        <div class="control-group">
+                            <label for="platformChartSpacing">Spaziatura canali:</label>
+                            <input type="range" id="platformChartSpacing" min="0" max="400" step="20" value="0" oninput="updatePlatformLabelSettings()">
+                            <span id="platformChartSpacingDisplay" style="min-width:40px;">+0px</span>
+                        </div>
+                        <div class="control-group">
+                            <label for="platformLabelWeight">Stile:</label>
+                            <select id="platformLabelWeight" onchange="updatePlatformLabelSettings()" style="padding:6px; border-radius:4px; border:1px solid var(--border); font-family:inherit;">
+                                <option value="600" selected>Grassetto</option>
+                                <option value="400">Normale</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="charts-container" id="chartsContainer"></div>
                     <div class="export-section">
                         <button class="secondary-btn" id="exportAllBtn">
@@ -828,6 +851,40 @@
             if (topicsData) {
                 generateTopicCharts();
             }
+        }
+
+        // --- v1.6: Impostazioni etichette grafici per piattaforma ---
+        let platformLabelSettings = {
+            auto: true,      // adattamento automatico della dimensione
+            size: 18,        // dimensione (massima se auto attivo)
+            spacing: 0,      // px aggiuntivi di larghezza del grafico
+            weight: 600      // 600 = grassetto, 400 = normale
+        };
+        const LABEL_FONT_FAMILY = "'Avenir Next LT Pro', Arial, sans-serif";
+        const MIN_AUTO_LABEL_SIZE = 9;
+        let _measureCtx = null;
+        function measureLabelWidth(text, size, weight) {
+            if (!_measureCtx) _measureCtx = document.createElement('canvas').getContext('2d');
+            _measureCtx.font = `${weight} ${size}px ${LABEL_FONT_FAMILY}`;
+            return _measureCtx.measureText(text).width;
+        }
+        // Restituisce la dimensione del font più grande (<= maxSize) che fa entrare
+        // tutte le etichette nello spazio disponibile per ciascun canale
+        function fitLabelSize(labels, availableWidth, maxSize, weight) {
+            for (let size = maxSize; size > MIN_AUTO_LABEL_SIZE; size -= 0.5) {
+                if (labels.every(l => measureLabelWidth(l, size, weight) <= availableWidth)) return size;
+            }
+            return MIN_AUTO_LABEL_SIZE;
+        }
+        function updatePlatformLabelSettings() {
+            platformLabelSettings.auto = document.getElementById('platformLabelAuto').checked;
+            platformLabelSettings.size = parseInt(document.getElementById('platformLabelSize').value);
+            platformLabelSettings.spacing = parseInt(document.getElementById('platformChartSpacing').value);
+            platformLabelSettings.weight = parseInt(document.getElementById('platformLabelWeight').value);
+            document.getElementById('platformLabelSizeLabel').innerText = platformLabelSettings.auto ? 'Dim. max etichette:' : 'Dim. etichette:';
+            document.getElementById('platformLabelSizeDisplay').innerText = platformLabelSettings.size + 'px';
+            document.getElementById('platformChartSpacingDisplay').innerText = '+' + platformLabelSettings.spacing + 'px';
+            if (campaignData) generateChartsVisual();
         }
 
         // --- NEW FUNCTION: KPI Settings Update ---
@@ -1470,8 +1527,8 @@
             const maxValue = Math.max(...data.map(d => parseFloat(d.value)));
             
             const svgHeight = 400;
-            const svgWidth = 500;
-            const margin = { top: 60, right: 30, bottom: 80, left: 60 };
+            const svgWidth = 500 + platformLabelSettings.spacing;
+            const margin = { top: 60, right: 30, bottom: 80, left: 30 };
             const chartWidth = svgWidth - margin.left - margin.right;
             const chartHeight = svgHeight - margin.top - margin.bottom;
             
@@ -1508,6 +1565,14 @@
             svg += `<text x="${svgWidth/2}" y="30" text-anchor="middle" 
                     font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="20" 
                     fill="#0033A0" font-weight="400">${title}</text>`;
+
+            // v1.6: dimensione etichette uniforme per tutto il grafico
+            const shortName = (n) => n.length > 15 ? n.substring(0, 13) + '..' : n;
+            const slotWidth = barWidth + barSpacing;
+            const labelWeight = platformLabelSettings.weight;
+            const labelSize = platformLabelSettings.auto
+                ? fitLabelSize(data.map(d => shortName(d.name)), slotWidth - 8, platformLabelSettings.size, labelWeight)
+                : platformLabelSettings.size;
             
             data.forEach((item, index) => {
                 const barHeight = maxValue > 0 ? (parseFloat(item.value) / maxValue) * chartHeight : 0;
@@ -1529,8 +1594,7 @@
                         ${displayValue}
                         </text>`;
                 
-                let displayName = item.name;
-                if (displayName.length > 15) displayName = displayName.substring(0, 13) + '..';
+                const displayName = shortName(item.name);
 
                 const labelX = x + barWidth/2;
                 
@@ -1544,13 +1608,13 @@
                 const logo = logoSet[logoName] || logoSet['sconosciuto'];
                 
                 // Posizionamento molto più vicino alla base delle barre
-                const labelY = axisBaseY + 15; // Testo subito sotto la linea di base
-                const logoY = axisBaseY + 25;  // Logo subito sotto il testo
+                const labelY = axisBaseY + 4 + Math.round(labelSize * 0.8); // Testo subito sotto la linea di base
+                const logoY = labelY + 10;  // Logo subito sotto il testo
                 
                 // Platforms have horizontal labels above logo
                 svg += `<text x="${labelX}" y="${labelY}" text-anchor="middle" 
-                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="18" 
-                        fill="#0033A0" font-weight="600">
+                        font-family="'Avenir Next LT Pro', Arial, sans-serif" font-size="${labelSize}" 
+                        fill="#0033A0" font-weight="${labelWeight}">
                         ${displayName}
                         <title>${item.name}</title>
                         </text>`;
